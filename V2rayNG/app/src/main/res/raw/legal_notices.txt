@@ -27,6 +27,14 @@ Included third-party software includes:
   zlib, and pybind11 notices
 - Additional Go modules under compatible GPL, MPL, Apache, MIT, and BSD terms
 
-The matching source archive contains the full texts and copyright notices in
-LICENSE, NOTICE.md, THIRD_PARTY_NOTICES.md, and third_party_licenses/.
+Launcher artwork:
 
+The HoloVLESS launcher icon is copyright © 2026 minako9667
+(https://t.me/NeruBurningROM), all rights reserved, and is used with the
+artist's permission. It is not licensed under GPL-3.0. Anyone redistributing
+their own build should replace the launcher artwork unless they have obtained
+separate permission from the artist.
+
+The matching source archive contains the full texts and copyright notices in
+LICENSE, NOTICE.md, ARTWORK_NOTICE.md, THIRD_PARTY_NOTICES.md, and
+third_party_licenses/.

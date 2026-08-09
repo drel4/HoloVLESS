@@ -15,6 +15,8 @@ The UI uses the Android platform ActionBar, dialogs, preferences, switches,
 and other Holo widgets with the standard Holo-blue accent. It does not include
 AppCompat, Material Components, CardView, or a Material toolbar. The existing
 application icon has been replaced with the supplied HoloVLESS artwork.
+The icon is copyright © 2026 minako9667, all rights reserved, and is used with
+permission; see `ARTWORK_NOTICE.md` before redistributing a build.
 
 The modern-core/Holo build was installed and tested on a Sony Xperia ZR C5503
 running Android 4.4.2. The supplied REALITY/XHTTP profile connected, Firefox

@@ -22,7 +22,8 @@ upstream v2rayNG, Xray-core, or third-party contributors.
 Every distributed APK must have an equivalently accessible HoloVLESS source
 archive next to it at no additional charge. The source archive must identify
 the same release or commit as the APK and must retain `LICENSE`, this notice,
-`THIRD_PARTY_NOTICES.md`, `third_party_licenses/`, and the build documentation.
+`ARTWORK_NOTICE.md`, `THIRD_PARTY_NOTICES.md`, `third_party_licenses/`, and the
+build documentation.
 
 The preferred source for the application and its Go wrapper is contained in
 this repository. `AndroidLibV2rayLite/go.mod` and `go.sum` pin the complete Go
@@ -43,3 +44,9 @@ Their notices and license texts are in `THIRD_PARTY_NOTICES.md` and
 `third_party_licenses/`. Those component licenses continue to apply to their
 respective source files and notices.
 
+## Artwork exception
+
+The HoloVLESS launcher icon is copyright © 2026 minako9667
+(https://t.me/NeruBurningROM), all rights reserved, and is used with the
+artist's permission. It is not licensed under GPL-3.0. The exact affected
+assets and redistribution guidance are recorded in `ARTWORK_NOTICE.md`.
