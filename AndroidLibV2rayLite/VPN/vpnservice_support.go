@@ -91,6 +91,16 @@ type ProtectedDialer struct {
 	protectSet
 }
 
+// DestIpAddress implements Xray's current SystemDialer interface. The wrapper
+// already resolves and caches the proxy server before the core starts, so expose
+// that address to transports which need it.
+func (d *ProtectedDialer) DestIpAddress() net.IP {
+	if d.vServer == nil {
+		return nil
+	}
+	return d.vServer.currentIP()
+}
+
 func (d *ProtectedDialer) IsVServerReady() bool {
 	return (d.vServer != nil)
 }
