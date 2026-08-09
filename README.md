@@ -14,7 +14,7 @@ therefore this modern-core build is supported on Android 4.4/API 19 and newer.
 The UI uses the Android platform ActionBar, dialogs, preferences, switches,
 and other Holo widgets with the standard Holo-blue accent. It does not include
 AppCompat, Material Components, CardView, or a Material toolbar. The existing
-application icon is intentionally retained until a HoloVLESS icon is designed.
+application icon has been replaced with the supplied HoloVLESS artwork.
 
 The modern-core/Holo build was installed and tested on a Sony Xperia ZR C5503
 running Android 4.4.2. The supplied REALITY/XHTTP profile connected, Firefox
@@ -27,6 +27,12 @@ See `docs/milestone6-modern-xray-api19.md` for the modern-core work and
 
 HoloVLESS retains the upstream GNU General Public License version 3; see
 `LICENSE`. It is not relicensed.
+
+Public APK downloads must be accompanied by equivalent access to the matching
+source archive at no additional charge. Modification dates, corresponding
+source instructions, third-party notices, and retained dependency licenses are
+documented in `NOTICE.md`, `THIRD_PARTY_NOTICES.md`, and
+`third_party_licenses/`.
 
 ## Holo legacy fork baseline
 

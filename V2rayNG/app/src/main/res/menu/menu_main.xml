@@ -71,6 +71,10 @@
         android:title="@string/title_settings"
         android:showAsAction="never" />
     <item
+        android:id="@+id/licenses"
+        android:title="@string/title_licenses"
+        android:showAsAction="never" />
+    <item
         android:id="@+id/logcat"
         android:title="@string/title_logcat"
         android:showAsAction="never" />

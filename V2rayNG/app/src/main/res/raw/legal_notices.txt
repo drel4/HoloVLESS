@@ -1,0 +1,32 @@
+HoloVLESS legal notices
+
+HoloVLESS is a modified version of v2rayNG and is distributed under the GNU
+General Public License version 3 (GPL-3.0). Major HoloVLESS modifications were
+made on 2026-08-09 and 2026-08-10.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See GPL-3.0 for details.
+
+The matching machine-readable source archive, GPL-3.0 text, build scripts,
+modification notice, and complete third-party notices must be offered next to
+every public APK download at no additional charge. If this APK was supplied
+without corresponding source access, request the matching HoloVLESS source
+archive from the distributor.
+
+Included third-party software includes:
+
+- v2rayNG: GPL-3.0
+- Xray-core and XTLS/reality: MPL-2.0 and BSD portions
+- SagerNet sing and sing-shadowsocks: GPL-3.0-or-later
+- BadVPN: BSD-3-Clause, Copyright (c) 2009 Ambroz Bizjak
+- libancillary: BSD-3-Clause, Copyright Nicolas George
+- AndroidX, Kotlin, Gson, RxJava, RxAndroid, RxPermissions, Barcode Scanner,
+  ZXing, ToastCompat, and portions of MMKV: Apache-2.0
+- MMKV and its bundled components: BSD-3-Clause, OpenSSL/SSLeay, Apache-2.0,
+  zlib, and pybind11 notices
+- Additional Go modules under compatible GPL, MPL, Apache, MIT, and BSD terms
+
+The matching source archive contains the full texts and copyright notices in
+LICENSE, NOTICE.md, THIRD_PARTY_NOTICES.md, and third_party_licenses/.
+

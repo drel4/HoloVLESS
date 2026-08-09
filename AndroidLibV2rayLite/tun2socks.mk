@@ -78,6 +78,7 @@ TUN2SOCKS_SOURCES := \
         flow/PacketProtoEncoder.c \
         flow/PacketProtoDecoder.c \
         socksclient/BSocksClient.c \
+		socks_udp_client/SocksUdpClient.c \
         tuntap/BTap.c \
         lwip/src/core/udp.c \
         lwip/src/core/memp.c \

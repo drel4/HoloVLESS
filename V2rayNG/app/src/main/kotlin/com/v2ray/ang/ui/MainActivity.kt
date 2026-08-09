@@ -2,6 +2,7 @@ package com.v2ray.ang.ui
 
 import android.Manifest
 import android.app.ActionBar
+import android.app.AlertDialog
 import android.app.FragmentTransaction
 import android.content.Intent
 import android.net.Uri
@@ -258,6 +259,17 @@ class MainActivity : BaseActivity() {
         R.id.settings -> {
             startActivity(Intent(this, SettingsActivity::class.java)
                     .putExtra("isRunning", mainViewModel.isRunning.value == true))
+            true
+        }
+        R.id.licenses -> {
+            val notices = resources.openRawResource(R.raw.legal_notices)
+                    .bufferedReader()
+                    .use { it.readText() }
+            AlertDialog.Builder(this)
+                    .setTitle(R.string.title_licenses)
+                    .setMessage(notices)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
             true
         }
         R.id.logcat -> {

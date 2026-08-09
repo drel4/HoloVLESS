@@ -120,3 +120,23 @@ Local DNS remained disabled and Remote DNS remained blank. The separate
 shipped `1.1.1.1` default. This was necessary because storing an empty Remote
 DNS preference masks the Kotlin fallback and otherwise makes KitKat send DNS
 queries to the private Wi-Fi router through the remote VPN exit.
+
+## Reproducible tun2socks source
+
+The public-source audit replaced the inherited moving native checkouts with
+vendored, checksummed archives:
+
+- XTLS/BadVPN commit `e89e09098c63059d31ab5eff4edc6fa2fc76c716`, archive
+  SHA-256 `1d08c49753c1cbca00cb30f48143fc7e05aea65f266c4cdad65874a89f32f91f`
+- Nicolas George's libancillary 0.9.1, archive SHA-256
+  `02657d9e5b0f25892fcdf21ff1f44a7db5c1d0bd8254c91885454e2880424050`
+
+`compile-tun2socks.sh` verifies both archives before extraction and the build
+continues to use NDK 22.1.7171670 with `APP_PLATFORM=android-19`. The source
+list now explicitly includes BadVPN's `SocksUdpClient.c`, required by the
+pinned revision. The rebuilt library SHA-256 values are:
+
+- armeabi-v7a: `bac25dabb17029627744cefae136d11caa93d8ab253951013ade748adc49e4c5`
+- arm64-v8a: `2d786a490987f8e48d92551a327d113fb8eedfe967a45b838d35f8dccd3d7e75`
+- x86: `768006a910524f2528868e7d52ab46a23ab76314a0464cfcb368fe36f0119d4d`
+- x86_64: `a9311529f1e331dd75bc38669c9224cfcc543105e7853f32c486ca019dd097b1`

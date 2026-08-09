@@ -46,8 +46,10 @@ saving.
 
 The content window uses a visible inverted dark Holo gradient while the footer
 uses a flat solid surface. The ActionBar subtitle contains only the application
-version, and a complete Russian resource set covers all 156 English string and
-string-array entries.
+version, and a complete Russian resource set covers all 157 English string and
+string-array entries. A native overflow-menu entry displays the GPL source
+offer, warranty disclaimer, and third-party license summary; the complete
+notices and retained license texts ship in the matching source archive.
 
 Source and runtime-classpath audits found no AppCompat, Material Components,
 CardView, FABProgressCircle, or Blacksquircle editor dependency. AndroidX
@@ -65,7 +67,7 @@ BUILD SUCCESSFUL
 
 The final `armeabi-v7a` debug APK is
 `artifacts/holo/HoloVLESS-modern-api19-debug.apk` in the workspace and has
-SHA-256 `7fa9edf4cf6db23c8742c03abac5672d1c56fd5110609593560fa53c76e23b98`.
+SHA-256 `6a00962d2d987260aee10486117ec8e2e422f74ad664fc186137759d87a11bb4`.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern
