@@ -1,7 +1,7 @@
 <resources>
 
     <style name="AppTheme" parent="@android:style/Theme.Holo">
-        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowBackground">@drawable/holo_window_background</item>
         <item name="android:windowActionModeOverlay">true</item>
     </style>
 

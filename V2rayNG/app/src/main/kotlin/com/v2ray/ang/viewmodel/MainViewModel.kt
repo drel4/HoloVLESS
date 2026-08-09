@@ -33,7 +33,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val isRunning by lazy { MutableLiveData<Boolean>() }
     val updateListAction by lazy { MutableLiveData<Int>() }
     val updateTestResultAction by lazy { MutableLiveData<String>() }
-    val trafficStatsAction by lazy { MutableLiveData<String>() }
 
     private val tcpingTestScope by lazy { CoroutineScope(Dispatchers.IO) }
 
@@ -141,10 +140,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 AppConfig.MSG_STATE_STOP_SUCCESS -> {
                     isRunning.value = false
-                    trafficStatsAction.value = ""
-                }
-                AppConfig.MSG_TRAFFIC_UPDATE -> {
-                    trafficStatsAction.value = intent.getStringExtra("content").orEmpty()
                 }
             }
         }

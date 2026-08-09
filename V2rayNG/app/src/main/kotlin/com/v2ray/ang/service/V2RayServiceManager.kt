@@ -42,7 +42,6 @@ object V2RayServiceManager {
     private const val NOTIFICATION_ID = 1
     private const val NOTIFICATION_PENDING_INTENT_CONTENT = 0
     private const val NOTIFICATION_PENDING_INTENT_STOP_V2RAY = 1
-    private const val NOTIFICATION_ICON_THRESHOLD = 3000
 
     val v2rayPoint: V2RayPoint = Libv2ray.newV2RayPoint(V2RayCallback())
     private val mMsgReceive = ReceiveMessageHandler()
@@ -295,15 +294,8 @@ object V2RayServiceManager {
         mSubscription = null
     }
 
-    private fun updateNotification(contentText: String?, proxyTraffic: Long, directTraffic: Long) {
+    private fun updateNotification(contentText: String?) {
         if (mBuilder != null) {
-            if (proxyTraffic < NOTIFICATION_ICON_THRESHOLD && directTraffic < NOTIFICATION_ICON_THRESHOLD) {
-                mBuilder?.setSmallIcon(R.drawable.ic_v)
-            } else if (proxyTraffic > directTraffic) {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_proxy)
-            } else {
-                mBuilder?.setSmallIcon(R.drawable.ic_stat_direct)
-            }
             mBuilder?.setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
             mBuilder?.setContentText(contentText) // Emui4.1 need content text even if style is set as BigTextStyle
             getNotificationManager()?.notify(NOTIFICATION_ID, mBuilder?.build())
@@ -320,7 +312,8 @@ object V2RayServiceManager {
 
     fun startSpeedNotification() {
         if (mSubscription == null &&
-                v2rayPoint.isRunning) {
+                v2rayPoint.isRunning &&
+                settingsStorage?.decodeBool(AppConfig.PREF_SPEED_ENABLED) == true) {
             var lastZeroSpeed = false
             val outboundTags = currentConfig?.getAllOutboundTags()
             outboundTags?.remove(TAG_DIRECT)
@@ -348,12 +341,7 @@ object V2RayServiceManager {
                             }
                             appendSpeedString(text, TAG_DIRECT, directUplink / sinceLastQueryInSeconds,
                                     directDownlink / sinceLastQueryInSeconds)
-                            val trafficText = text.toString().trim()
-                            MessageUtil.sendMsg2UI(serviceControl?.get()?.getService() ?: return@subscribe,
-                                    AppConfig.MSG_TRAFFIC_UPDATE, trafficText)
-                            if (settingsStorage?.decodeBool(AppConfig.PREF_SPEED_ENABLED) == true) {
-                                updateNotification(trafficText, proxyTotal, directDownlink + directUplink)
-                            }
+                            updateNotification(text.toString().trim())
                         }
                         lastZeroSpeed = zeroSpeed
                         lastQueryTime = queryTime
@@ -373,7 +361,7 @@ object V2RayServiceManager {
         if (mSubscription != null) {
             mSubscription?.unsubscribe() //stop queryStats
             mSubscription = null
-            updateNotification(currentConfig?.remarks, 0, 0)
+            updateNotification(currentConfig?.remarks)
         }
     }
 }

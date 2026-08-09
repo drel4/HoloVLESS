@@ -90,8 +90,7 @@
     <string name="summary_pref_mux_enabled">Enable maybe speed up network and switch network maybe flash</string>
 
     <string name="title_pref_speed_enabled">Enable speed display</string>
-    <string name="summary_pref_speed_enabled">Display current speed in the notification.\nNotification icon would change based on
-        usage.</string>
+    <string name="summary_pref_speed_enabled">Display current speed in the notification.</string>
 
     <string name="title_pref_sniffing_enabled">Enable Sniffing</string>
     <string name="summary_pref_sniffing_enabled">Try sniff domain from the packet (default on)</string>
@@ -175,7 +174,7 @@
     <string name="connection_test_fail">Internet Unavailable</string>
     <string name="connection_test_error_status_code">Error code: #%d</string>
     <string name="connection_connected">Connected, tap to check connection</string>
-    <string name="connection_connected_hold">Connected · tap to test · hold to disconnect</string>
+    <string name="connection_connected_hold">Connected · tap to test\nHold to disconnect</string>
     <string name="connection_connecting">Connecting…</string>
     <string name="connection_not_connected">Not connected</string>
 

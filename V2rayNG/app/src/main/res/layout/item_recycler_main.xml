@@ -81,7 +81,7 @@
         android:layout_height="18dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingLeft="64dp"
+        android:paddingLeft="8dp"
         android:paddingRight="8dp">
 
         <TextView

@@ -76,6 +76,5 @@ object AppConfig {
     const val MSG_STATE_START_FAILURE = 32
     const val MSG_STATE_STOP = 4
     const val MSG_STATE_STOP_SUCCESS = 41
-    const val MSG_TRAFFIC_UPDATE = 51
     const val MSG_STATE_RESTART = 5
 }

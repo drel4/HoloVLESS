@@ -13,17 +13,6 @@
         android:paddingTop="4dp"
         android:paddingBottom="4dp" />
 
-    <TextView
-        android:id="@+id/tv_traffic"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingBottom="4dp"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="@color/colorPrimary"
-        android:visibility="gone" />
-
     <View
         android:layout_width="match_parent"
         android:layout_height="2dp"

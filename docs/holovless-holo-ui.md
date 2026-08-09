@@ -26,9 +26,10 @@ monospace editor.
 
 The server list, selection, sharing, editing, deletion, connect/disconnect
 status, add/import menu, settings, subscriptions, routing, per-app proxy, and
-logging entry points remain available. Basic live upload/download traffic
-statistics are now shown on the main screen even when notification speed text
-is disabled; the notification itself still follows its existing preference.
+logging entry points remain available. Optional live upload/download speed is
+kept in the service notification and follows its existing preference; it is no
+longer duplicated on the main screen. Notification updates retain one stable
+small icon instead of swapping between differently padded traffic icons.
 The bottom status and action controls are one flat edge-to-edge Holo footer:
 tap while stopped to connect, tap while running to test the connection, and
 hold while running to disconnect.
@@ -39,6 +40,10 @@ at the far right on one line. Feedback and promotion entries, including the
 old promotional list footer, were removed. The VLESS editor now opens safely,
 recognizes XHTTP and REALITY, and retains existing REALITY key material when
 saving.
+
+The window uses a visible dark Holo gradient, the ActionBar subtitle contains
+only the application version, and a complete Russian resource set covers all
+158 English string and string-array entries.
 
 Source and runtime-classpath audits found no AppCompat, Material Components,
 CardView, FABProgressCircle, or Blacksquircle editor dependency. AndroidX
@@ -56,14 +61,13 @@ BUILD SUCCESSFUL
 
 The final `armeabi-v7a` debug APK is
 `artifacts/holo/HoloVLESS-modern-api19-debug.apk` in the workspace and has
-SHA-256 `dbff947423211a5e1a7dfd5c7daae927c131e1f61dbba2bdcdf44a5d29824168`.
+SHA-256 `60ddcdb99afc1e3962af6422048311cd41db4e799ea958219fbee6063b490375`.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern
 REALITY/XHTTP/PQ profile was selected, Xray and tun2socks stayed running,
 Firefox loaded `https://myip.wtf`, and the expected ISP `Senko Digital LLC`
-was shown. The main screen displayed non-zero proxy traffic counters after
-the browser request. Tap-to-connect, tap-to-test, and hold-to-disconnect were
+was shown. Tap-to-connect, tap-to-test, and hold-to-disconnect were
 each exercised on the footer, and the VLESS editor opened without a runtime
 exception. Local DNS remained off, Remote DNS remained blank, and
 the separate stock VPN DNS field remained `1.1.1.1`.
@@ -73,4 +77,4 @@ profile is not committed to the repository or reproduced in this document.
 
 Screenshots are retained under the workspace's `artifacts/holo` directory,
 including the main list, platform settings, import menu, connected state,
-browser ISP result, and live traffic display.
+browser ISP result, compact rows, Russian UI, and Holo gradient.

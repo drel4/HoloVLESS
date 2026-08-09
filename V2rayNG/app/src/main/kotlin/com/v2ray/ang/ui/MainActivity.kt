@@ -56,7 +56,7 @@ class MainActivity : BaseActivity() {
         val view = binding.root
         setContentView(view)
         title = getString(R.string.app_name)
-        actionBar?.subtitle = "${getString(R.string.title_server)} · v${BuildConfig.VERSION_NAME}"
+        actionBar?.subtitle = "v${BuildConfig.VERSION_NAME}"
 
         binding.connectButton.setOnClickListener {
             if (mainViewModel.isRunning.value == true) {
@@ -109,10 +109,6 @@ class MainActivity : BaseActivity() {
                 binding.connectButton.text = it
             }
         }
-        mainViewModel.trafficStatsAction.observe(this) {
-            binding.tvTraffic.text = it
-            binding.tvTraffic.visibility = if (it.isNullOrBlank()) View.GONE else View.VISIBLE
-        }
         mainViewModel.isRunning.observe(this) {
             val isRunning = it ?: return@observe
             adapter.isRunning = isRunning
@@ -120,7 +116,6 @@ class MainActivity : BaseActivity() {
                 binding.connectButton.setText(R.string.connection_connected_hold)
             } else {
                 binding.connectButton.setText(R.string.action_connect)
-                binding.tvTraffic.visibility = View.GONE
             }
             hideCircle()
         }
