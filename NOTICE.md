@@ -44,9 +44,10 @@ Their notices and license texts are in `THIRD_PARTY_NOTICES.md` and
 `third_party_licenses/`. Those component licenses continue to apply to their
 respective source files and notices.
 
-## Artwork exception
+## Launcher artwork
 
-The HoloVLESS launcher icon is copyright © 2026 minako9667
-(https://t.me/NeruBurningROM), all rights reserved, and is used with the
-artist's permission. It is not licensed under GPL-3.0. The exact affected
-assets and redistribution guidance are recorded in `ARTWORK_NOTICE.md`.
+The HoloVLESS launcher icon is copyright (c) 2026 minako9667
+(https://t.me/NeruBurningROM) and is licensed separately under WTFPL-2.0. It
+may be copied, modified, and redistributed under that license. The affected
+assets are recorded in `ARTWORK_NOTICE.md`, and the complete license text is
+in `third_party_licenses/WTFPL-2.0.txt`.
