@@ -11,7 +11,8 @@ on-device gate on 2026-08-09.
 - App manifest minSdk: 17; the modern Go AAR raises this build's effective
   supported floor to API 19
 - App name: HoloVLESS
-- Icon: existing inherited icon, unchanged pending a new design
+- Icon: supplied HoloVLESS artwork, rendered as density-specific legacy
+  launcher assets from mdpi through xxxhdpi
 - License: inherited GPL-3.0, unchanged
 
 ## Before and after
@@ -64,7 +65,7 @@ BUILD SUCCESSFUL
 
 The final `armeabi-v7a` debug APK is
 `artifacts/holo/HoloVLESS-modern-api19-debug.apk` in the workspace and has
-SHA-256 `0128d40d4a713fb8572519427a01a8a63c7ce72bfcf6b40733d9fa2fd4aab6f8`.
+SHA-256 `7fa9edf4cf6db23c8742c03abac5672d1c56fd5110609593560fa53c76e23b98`.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern
