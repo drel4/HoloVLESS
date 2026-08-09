@@ -174,14 +174,6 @@ class SettingsActivity : BaseActivity() {
 //                startActivity<InappBuyActivity>()
 //            }
 
-//            licenses.onClick {
-//                val fragment = LicensesDialogFragment.Builder(act)
-//                        .setNotices(R.raw.licenses)
-//                        .setIncludeOwnLicense(false)
-//                        .build()
-//                fragment.show((act as AppCompatActivity).supportFragmentManager, null)
-//            }
-//
 //            feedback.onClick {
 //                Utils.openUri(activity, "https://github.com/2dust/v2rayNG/issues")
 //            }

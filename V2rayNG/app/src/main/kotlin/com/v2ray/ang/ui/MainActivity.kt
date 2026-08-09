@@ -1,6 +1,8 @@
 package com.v2ray.ang.ui
 
 import android.Manifest
+import android.app.ActionBar
+import android.app.FragmentTransaction
 import android.content.Intent
 import android.net.Uri
 import android.net.VpnService
@@ -57,6 +59,7 @@ class MainActivity : BaseActivity() {
         setContentView(view)
         title = getString(R.string.app_name)
         actionBar?.subtitle = "v${BuildConfig.VERSION_NAME}"
+        setupMainTabs()
 
         binding.connectButton.setOnClickListener {
             if (mainViewModel.isRunning.value == true) {
@@ -138,6 +141,28 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    private fun setupMainTabs() {
+        actionBar?.let { bar ->
+            bar.navigationMode = ActionBar.NAVIGATION_MODE_TABS
+            bar.addTab(bar.newTab()
+                    .setText(R.string.title_tab_configs)
+                    .setTabListener(object : ActionBar.TabListener {
+                        override fun onTabSelected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
+                        override fun onTabUnselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
+                        override fun onTabReselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
+                    }))
+            bar.addTab(bar.newTab()
+                    .setText(R.string.title_tab_subscriptions)
+                    .setTabListener(object : ActionBar.TabListener {
+                        override fun onTabSelected(tab: ActionBar.Tab, transaction: FragmentTransaction?) {
+                            startActivity(Intent(this@MainActivity, SubSettingActivity::class.java))
+                        }
+                        override fun onTabUnselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
+                        override fun onTabReselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
+                    }))
+        }
+    }
+
     fun startV2Ray() {
         if (mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER).isNullOrEmpty()) {
             return
@@ -150,6 +175,9 @@ class MainActivity : BaseActivity() {
 
     public override fun onResume() {
         super.onResume()
+        if (actionBar?.navigationMode == ActionBar.NAVIGATION_MODE_TABS) {
+            actionBar?.setSelectedNavigationItem(0)
+        }
         mainViewModel.reloadServerList()
     }
 
@@ -227,10 +255,6 @@ class MainActivity : BaseActivity() {
             true
         }
 
-        R.id.sub_setting -> {
-            startActivity(Intent(this, SubSettingActivity::class.java))
-            true
-        }
         R.id.settings -> {
             startActivity(Intent(this, SettingsActivity::class.java)
                     .putExtra("isRunning", mainViewModel.isRunning.value == true))

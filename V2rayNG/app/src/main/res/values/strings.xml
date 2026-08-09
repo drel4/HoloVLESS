@@ -151,6 +151,8 @@
     <string name="logcat_delete">Delete</string>
     <string name="title_export_all">Export non-custom configs to clipboard</string>
     <string name="title_sub_setting">Subscription setting</string>
+    <string name="title_tab_configs">Configurations</string>
+    <string name="title_tab_subscriptions">Subscriptions</string>
     <string name="sub_setting_remarks">remarks</string>
     <string name="sub_setting_url">url</string>
     <string name="title_sub_update">Update subscription</string>

@@ -30,6 +30,8 @@ logging entry points remain available. Optional live upload/download speed is
 kept in the service notification and follows its existing preference; it is no
 longer duplicated on the main screen. Notification updates retain one stable
 small icon instead of swapping between differently padded traffic icons.
+Configurations and subscriptions are exposed as native Holo ActionBar tabs;
+the subscription tab opens the existing group manager and add-profile flow.
 The bottom status and action controls are one flat edge-to-edge Holo footer:
 tap while stopped to connect, tap while running to test the connection, and
 hold while running to disconnect.
@@ -41,9 +43,10 @@ old promotional list footer, were removed. The VLESS editor now opens safely,
 recognizes XHTTP and REALITY, and retains existing REALITY key material when
 saving.
 
-The window uses a visible dark Holo gradient, the ActionBar subtitle contains
-only the application version, and a complete Russian resource set covers all
-158 English string and string-array entries.
+The content window uses a visible inverted dark Holo gradient while the footer
+uses a flat solid surface. The ActionBar subtitle contains only the application
+version, and a complete Russian resource set covers all 156 English string and
+string-array entries.
 
 Source and runtime-classpath audits found no AppCompat, Material Components,
 CardView, FABProgressCircle, or Blacksquircle editor dependency. AndroidX
@@ -61,7 +64,7 @@ BUILD SUCCESSFUL
 
 The final `armeabi-v7a` debug APK is
 `artifacts/holo/HoloVLESS-modern-api19-debug.apk` in the workspace and has
-SHA-256 `c678116559b5dfbd894f6164dd9e917018ff0dc54e8744ef4a22db5d44a6224f`.
+SHA-256 `0128d40d4a713fb8572519427a01a8a63c7ce72bfcf6b40733d9fa2fd4aab6f8`.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern
@@ -69,7 +72,9 @@ REALITY/XHTTP/PQ profile was selected, Xray and tun2socks stayed running,
 Firefox loaded `https://myip.wtf`, and the expected ISP `Senko Digital LLC`
 was shown. Tap-to-connect, tap-to-test, and hold-to-disconnect were
 each exercised on the footer, and the VLESS editor opened without a runtime
-exception. Local DNS remained off, Remote DNS remained blank, and
+exception. The empty subscription manager and add-profile screen were also
+opened without an Android runtime exception; no example subscription was
+required or saved. Local DNS remained off, Remote DNS remained blank, and
 the separate stock VPN DNS field remained `1.1.1.1`.
 
 The generated proxy configuration remains excluded from logs. The provided

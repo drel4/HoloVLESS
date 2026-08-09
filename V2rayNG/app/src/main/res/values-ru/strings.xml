@@ -126,6 +126,8 @@
     <string name="logcat_delete">Удалить</string>
     <string name="title_export_all">Экспорт профилей в буфер обмена</string>
     <string name="title_sub_setting">Группы</string>
+    <string name="title_tab_configs">Конфигурации</string>
+    <string name="title_tab_subscriptions">Подписки</string>
     <string name="sub_setting_remarks">Название</string>
     <string name="sub_setting_url">URL (необязательно)</string>
     <string name="title_sub_update">Обновить подписку</string>
