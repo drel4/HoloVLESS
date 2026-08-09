@@ -64,14 +64,15 @@ declares minSdk 17/targetSdk 30, and installs and launches on a Sony Xperia ZR
 C5503 running Android 4.4.2 (API 19). The bundled MMKV and Go JNI libraries
 load there.
 
-End-to-end VLESS verification is currently blocked by the supplied test
-profile: Xray-core 1.5.2 rejects its newer `xhttp` transport with `unknown
-transport protocol: xhttp`. The profile also uses newer REALITY/PQ parameters.
-The inherited core has deliberately not been upgraded, so the VPN stops before
-traffic can reach `myip.wtf`; the expected ISP result has not been observed.
-A legacy-compatible VLESS-over-TCP/TLS or WebSocket/TLS test profile is needed
-to finish this milestone. Samsung Galaxy S5 verification remains pending manual
-testing by the user after the connected Xperia baseline passes.
+End-to-end VLESS verification passed on the Xperia using the replacement
+legacy-compatible VLESS-over-TCP profile. On this Android 4.4 device, the
+default UDP DNS path timed out; enabling the app's existing local-DNS option
+and setting remote DNS to `https://1.1.1.1/dns-query` made the connection fully
+operational. Firefox then loaded `https://myip.wtf`, which reported the expected
+ISP, Senko Digital LLC. The initial profile remains unsupported because
+Xray-core 1.5.2 does not recognize its newer `xhttp` transport and REALITY/PQ
+parameters; the inherited core was not upgraded. Samsung Galaxy S5 verification
+remains pending manual testing by the user.
 
 [![API](https://img.shields.io/badge/API-17%2B-yellow.svg?style=flat)](https://developer.android.com/about/versions/jelly-bean#android-4.2)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-1.5.10-blue.svg)](https://kotlinlang.org)
