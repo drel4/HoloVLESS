@@ -29,11 +29,8 @@ Included third-party software includes:
 
 Launcher artwork:
 
-The HoloVLESS launcher icon is copyright (c) 2026 minako9667
-(https://t.me/NeruBurningROM) and is licensed separately under the Do What The
-Fuck You Want To Public License, Version 2 (WTFPL-2.0). It may be copied,
-modified, and redistributed under that license.
+This release uses the original v2rayNG launcher artwork from the upstream
+GPL-3.0 source. No separately licensed HoloVLESS artwork is included.
 
 The matching source archive contains the full texts and copyright notices in
-LICENSE, NOTICE.md, ARTWORK_NOTICE.md, THIRD_PARTY_NOTICES.md, and
-third_party_licenses/.
+LICENSE, NOTICE.md, THIRD_PARTY_NOTICES.md, and third_party_licenses/.

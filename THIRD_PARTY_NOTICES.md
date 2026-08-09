@@ -64,12 +64,10 @@ OpenSSL/SSLeay, Apache-2.0, zlib, and pybind11 notices. Tencent's complete
 
 JUnit is used only for tests and is not packaged in the APK.
 
-## HoloVLESS launcher artwork
+## Launcher artwork
 
-The launcher icon is copyright (c) 2026 minako9667
-(https://t.me/NeruBurningROM) and is licensed separately under WTFPL-2.0. It
-may be copied, modified, and redistributed under that license. See
-`ARTWORK_NOTICE.md` for the affected assets.
+This release restores the original v2rayNG launcher artwork from the upstream
+GPL-3.0 source. No separately licensed HoloVLESS artwork is included.
 
 ## License locations
 
@@ -79,5 +77,3 @@ may be copied, modified, and redistributed under that license. See
 - Apache-2.0 convenience copy: `third_party_licenses/Apache-2.0.txt`
 - Native BSD notices: `third_party_licenses/native/`
 - MMKV complete notice: `third_party_licenses/android/`
-- Launcher artwork terms: `ARTWORK_NOTICE.md`
-- WTFPL-2.0 text: `third_party_licenses/WTFPL-2.0.txt`

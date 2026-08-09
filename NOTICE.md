@@ -8,7 +8,7 @@ complete license text is in `LICENSE`.
 ## Modification notice
 
 This fork was modified on 2026-08-09 and 2026-08-10. Material changes include
-the Android 4.x native-Holo interface, HoloVLESS branding and launcher assets,
+the Android 4.x native-Holo interface, HoloVLESS branding,
 Russian localization, the API-19 modern Xray-core binding, VLESS
 REALITY/XHTTP/PQ profile support, generated-configuration log redaction,
 subscription navigation, and reproducible native dependency packaging.
@@ -22,8 +22,7 @@ upstream v2rayNG, Xray-core, or third-party contributors.
 Every distributed APK must have an equivalently accessible HoloVLESS source
 archive next to it at no additional charge. The source archive must identify
 the same release or commit as the APK and must retain `LICENSE`, this notice,
-`ARTWORK_NOTICE.md`, `THIRD_PARTY_NOTICES.md`, `third_party_licenses/`, and the
-build documentation.
+`THIRD_PARTY_NOTICES.md`, `third_party_licenses/`, and the build documentation.
 
 The preferred source for the application and its Go wrapper is contained in
 this repository. `AndroidLibV2rayLite/go.mod` and `go.sum` pin the complete Go
@@ -46,8 +45,5 @@ respective source files and notices.
 
 ## Launcher artwork
 
-The HoloVLESS launcher icon is copyright (c) 2026 minako9667
-(https://t.me/NeruBurningROM) and is licensed separately under WTFPL-2.0. It
-may be copied, modified, and redistributed under that license. The affected
-assets are recorded in `ARTWORK_NOTICE.md`, and the complete license text is
-in `third_party_licenses/WTFPL-2.0.txt`.
+This release uses the original launcher artwork from the GPL-3.0 v2rayNG
+upstream source. No separately licensed HoloVLESS artwork is included.
