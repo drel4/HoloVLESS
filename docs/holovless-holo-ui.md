@@ -61,7 +61,7 @@ BUILD SUCCESSFUL
 
 The final `armeabi-v7a` debug APK is
 `artifacts/holo/HoloVLESS-modern-api19-debug.apk` in the workspace and has
-SHA-256 `60ddcdb99afc1e3962af6422048311cd41db4e799ea958219fbee6063b490375`.
+SHA-256 `c678116559b5dfbd894f6164dd9e917018ff0dc54e8744ef4a22db5d44a6224f`.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern
