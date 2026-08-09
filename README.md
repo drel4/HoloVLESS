@@ -23,6 +23,56 @@ runtime experiment after the API 17 baseline has passed.
 This fork retains the upstream GNU General Public License version 3; see
 `LICENSE`. It is not relicensed.
 
+### API 17 baseline build and device status
+
+The command-line baseline build runs on Debian 13 with the following pinned
+toolchain:
+
+- Eclipse Temurin JDK 11.0.32+9
+- Gradle 6.7.1 and Android Gradle Plugin 4.2.2
+- Kotlin Gradle plugin 1.5.10 (Gradle embeds Kotlin 1.3.72)
+- Android SDK command-line tools 12.0
+- Android platform 30 revision 3 and build-tools 30.0.2
+- Android NDK 22.1.7171670 (installed for parity with the bundled tun2socks
+  binary; the baseline build uses the inherited binaries and does not invoke
+  the NDK)
+
+The remote source is cloned directly from upstream tag `1.6.30`. Tooling-only
+files are copied from the local working tree to the server with PuTTY `pscp`,
+and built APKs are copied back the same way. The reproducible baseline command
+is:
+
+```sh
+env JAVA_HOME=/home/nyash/v2rayNG-toolchains/jdk11 \
+    ANDROID_SDK_ROOT=/home/nyash/Android/Sdk \
+    bash ./gradlew clean assembleDebug --no-daemon
+```
+
+The original JCenter endpoint no longer resolves MMKV 1.2.7 and RxPermissions
+0.9.4 reliably. An Aliyun JCenter mirror is therefore included as a build
+repository without changing either dependency. The retrieved AARs were
+cross-checked against Huawei's mirror and matched exactly:
+
+- MMKV 1.2.7 SHA-256:
+  `470975a977e8a072839f9f7c4fa9b891ece7910723d96bab2662ee23e2bbae4a`
+- RxPermissions 0.9.4 SHA-256:
+  `074d485acf74d6a484471b5630d4b5d4551fb784d982e223078b7f2400c9e871`
+
+The resulting `armeabi-v7a` debug APK has SHA-256
+`9151530000f1ecc00c5e53470d8cd8c5a9f75ed063112d0b2c8eedeb49514031`,
+declares minSdk 17/targetSdk 30, and installs and launches on a Sony Xperia ZR
+C5503 running Android 4.4.2 (API 19). The bundled MMKV and Go JNI libraries
+load there.
+
+End-to-end VLESS verification is currently blocked by the supplied test
+profile: Xray-core 1.5.2 rejects its newer `xhttp` transport with `unknown
+transport protocol: xhttp`. The profile also uses newer REALITY/PQ parameters.
+The inherited core has deliberately not been upgraded, so the VPN stops before
+traffic can reach `myip.wtf`; the expected ISP result has not been observed.
+A legacy-compatible VLESS-over-TCP/TLS or WebSocket/TLS test profile is needed
+to finish this milestone. Samsung Galaxy S5 verification remains pending manual
+testing by the user after the connected Xperia baseline passes.
+
 [![API](https://img.shields.io/badge/API-17%2B-yellow.svg?style=flat)](https://developer.android.com/about/versions/jelly-bean#android-4.2)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-1.5.10-blue.svg)](https://kotlinlang.org)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/2dust/v2rayNG)](https://github.com/2dust/v2rayNG/commits/master)

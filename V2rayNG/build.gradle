@@ -19,6 +19,9 @@ allprojects {
     repositories {
         google()
         jcenter()
+        // JCenter is read-only and no longer reliably serves older artifacts.
+        // Keep the inherited dependency versions and resolve them via a mirror.
+        maven { url 'https://maven.aliyun.com/repository/jcenter' }
         maven { url 'https://maven.google.com' }
     }
 }
