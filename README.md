@@ -2,6 +2,27 @@
 
 A V2Ray client for Android, support [Xray core](https://github.com/XTLS/Xray-core) and [v2fly core](https://github.com/v2fly/v2ray-core)
 
+## Holo legacy fork baseline
+
+This fork is based on upstream tag `1.6.30`, commit
+`e9b1052ef78a71506d6b98f9099980b45e0ac15c`. It was selected because it is
+the numerically newest stable `1.6.x` tag and its checked-in
+`V2rayNG/app/build.gradle` declares `minSdkVersion 17`. Upstream tags
+`1.6.29` and `1.6.30` point to the same commit.
+
+The baseline compiles and targets Android API 30 with build-tools 30.0.2.
+Its bundled `libv2ray.aar` manifest declares API 15 and the corresponding Go
+module pins Xray-core 1.5.2. The AAR's Go JNI ELF note records API 16 and
+Android NDK r21. The checked-in tun2socks build script specifies
+`APP_PLATFORM=android-19`, matching the bundled tun2socks ELF note, which
+records API 19 and Android NDK r22b. These native API-floor signals conflict,
+so API 16 support is not claimed from manifest metadata alone. API 17 remains
+the supported floor pending the separate API 16 build, imported-symbol, and
+runtime experiment after the API 17 baseline has passed.
+
+This fork retains the upstream GNU General Public License version 3; see
+`LICENSE`. It is not relicensed.
+
 [![API](https://img.shields.io/badge/API-17%2B-yellow.svg?style=flat)](https://developer.android.com/about/versions/jelly-bean#android-4.2)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-1.5.10-blue.svg)](https://kotlinlang.org)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/2dust/v2rayNG)](https://github.com/2dust/v2rayNG/commits/master)
