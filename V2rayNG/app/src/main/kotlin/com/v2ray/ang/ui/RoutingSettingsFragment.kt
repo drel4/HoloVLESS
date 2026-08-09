@@ -5,7 +5,7 @@ import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import androidx.preference.PreferenceManager
+import android.preference.PreferenceManager
 import android.view.*
 import com.v2ray.ang.R
 import com.v2ray.ang.util.Utils

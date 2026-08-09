@@ -62,9 +62,7 @@ object AppConfig {
 
     const val androidpackagenamelistUrl = "https://raw.githubusercontent.com/2dust/androidpackagenamelist/master/proxy.txt"
     const val v2rayCustomRoutingListUrl = "https://raw.githubusercontent.com/2dust/v2rayCustomRoutingList/master/"
-    const val v2rayNGIssues = "https://github.com/2dust/v2rayNG/issues"
     const val v2rayNGWikiMode = "https://github.com/2dust/v2rayNG/wiki/Mode"
-    const val promotionUrl = "https://1.2345345.xyz/ads.html"
 
     const val DNS_AGENT = "1.1.1.1"
     const val DNS_DIRECT = "223.5.5.5"
@@ -78,5 +76,6 @@ object AppConfig {
     const val MSG_STATE_START_FAILURE = 32
     const val MSG_STATE_STOP = 4
     const val MSG_STATE_STOP_SUCCESS = 41
+    const val MSG_TRAFFIC_UPDATE = 51
     const val MSG_STATE_RESTART = 5
 }

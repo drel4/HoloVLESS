@@ -125,13 +125,9 @@
     <string name="title_pref_local_dns_port">本地DNS端口</string>
     <string name="summary_pref_local_dns_port">本地DNS端口</string>
 
-    <string name="title_pref_feedback">回饋</string>
-    <string name="summary_pref_feedback">回饋提升或前往 GitHub 回報 Bug</string>
     <string name="summary_pref_tg_group">加入Telegram Group</string>
     <string name="toast_tg_app_not_found">未找到Telegram app</string>
 
-    <string name="title_pref_promotion">推廣</string>
-    <string name="summary_pref_promotion">一些推廣,點擊查看詳情(捐款可去除)</string>
 
     <string name="title_mode">模式</string>
     <string name="title_mode_help">點此查看更多幫助</string>

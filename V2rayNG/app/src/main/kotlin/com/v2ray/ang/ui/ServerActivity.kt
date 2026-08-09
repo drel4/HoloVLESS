@@ -1,7 +1,7 @@
 package com.v2ray.ang.ui
 
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog
+import android.app.AlertDialog
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
@@ -83,10 +83,10 @@ class ServerActivity : BaseActivity() {
         val config = MmkvManager.decodeServerConfig(editGuid)
         when(config?.configType ?: createConfigType) {
             EConfigType.VMESS -> setContentView(R.layout.activity_server_vmess)
+            EConfigType.VLESS -> setContentView(R.layout.activity_server_vmess)
             EConfigType.CUSTOM -> return
             EConfigType.SHADOWSOCKS -> setContentView(R.layout.activity_server_shadowsocks)
             EConfigType.SOCKS -> setContentView(R.layout.activity_server_socks)
-//            EConfigType.VLESS -> setContentView(R.layout.activity_server_vless)
 //            EConfigType.TROJAN -> setContentView(R.layout.activity_server_trojan)
         }
         sp_network?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -114,7 +114,7 @@ class ServerActivity : BaseActivity() {
         } else {
             clearServer()
         }
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        actionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     /**
@@ -131,7 +131,7 @@ class ServerActivity : BaseActivity() {
         if (config.configType == EConfigType.SOCKS) {
             et_security.text = Utils.getEditable(outbound.settings?.servers?.get(0)?.users?.get(0)?.user.orEmpty())
         } else if (config.configType == EConfigType.VLESS) {
-            et_security.text = Utils.getEditable(outbound.getSecurityEncryption().orEmpty())
+            sp_security?.setSelection(Utils.arrayFind(securitys, "none").coerceAtLeast(0))
             val flow = Utils.arrayFind(flows, outbound.settings?.vnext?.get(0)?.users?.get(0)?.flow.orEmpty())
             if (flow >= 0) {
                 //sp_flow.setSelection(flow)
@@ -146,7 +146,7 @@ class ServerActivity : BaseActivity() {
         val streamSecurity = Utils.arrayFind(streamSecuritys, streamSetting.security)
         if (streamSecurity >= 0) {
             sp_stream_security?.setSelection(streamSecurity)
-            (streamSetting.tlsSettings?: streamSetting.xtlsSettings)?.let { tlsSetting ->
+            (streamSetting.tlsSettings ?: streamSetting.xtlsSettings ?: streamSetting.realitySettings)?.let { tlsSetting ->
                 val allowinsecure = Utils.arrayFind(allowinsecures, tlsSetting.allowInsecure.toString())
                 if (allowinsecure >= 0) {
                     sp_allow_insecure?.setSelection(allowinsecure)
@@ -230,7 +230,9 @@ class ServerActivity : BaseActivity() {
         if (config.configType == EConfigType.VMESS) {
             vnext.users[0].security = securitys[sp_security.selectedItemPosition]
         } else if (config.configType == EConfigType.VLESS) {
-            vnext.users[0].encryption = et_security.text.toString().trim()
+            if (vnext.users[0].encryption.isBlank()) {
+                vnext.users[0].encryption = "none"
+            }
             if (streamSecuritys[sp_stream_security.selectedItemPosition] == XTLS) {
 //                vnext.users[0].flow = flows[sp_flow.selectedItemPosition].ifBlank { V2rayConfig.DEFAULT_FLOW }
             } else {
@@ -281,10 +283,17 @@ class ServerActivity : BaseActivity() {
             allowinsecures[sp_allow_insecure.selectedItemPosition].toBoolean()
         }
         val defaultTls = if (config.configType == EConfigType.TROJAN) V2rayConfig.TLS else ""
+        val selectedSecurity = if (sp_stream_security != null) streamSecuritys[sp_stream_security.selectedItemPosition] else defaultTls
+        val existingReality = streamSetting.realitySettings
         streamSetting.populateTlsSettings(
-                if (sp_stream_security != null) streamSecuritys[sp_stream_security.selectedItemPosition] else defaultTls,
+                selectedSecurity,
                 allowInsecure,
-                sni
+                if (selectedSecurity == V2rayConfig.REALITY) existingReality?.serverName.orEmpty() else sni,
+                existingReality?.fingerprint,
+                existingReality?.publicKey,
+                existingReality?.shortId,
+                existingReality?.spiderX,
+                existingReality?.mldsa65Verify
         )
     }
 
@@ -295,6 +304,8 @@ class ServerActivity : BaseActivity() {
             kcpAndQuicTypes
         } else if (network == "grpc") {
             grpcModes
+        } else if (network == "xhttp") {
+            arrayOf("auto", "packet-up", "stream-up")
         } else {
             arrayOf("---")
         }

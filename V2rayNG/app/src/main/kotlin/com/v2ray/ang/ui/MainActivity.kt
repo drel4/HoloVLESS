@@ -5,9 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.net.VpnService
 import android.os.Bundle
-import com.google.android.material.navigation.NavigationView
-import androidx.core.view.GravityCompat
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import android.text.TextUtils
@@ -36,13 +33,10 @@ import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import libv2ray.Libv2ray
 import me.drakeet.support.toast.ToastCompat
-import rx.Observable
-import rx.android.schedulers.AndroidSchedulers
-import java.util.concurrent.TimeUnit
+import android.view.View
 
-class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : BaseActivity() {
     private lateinit var binding: ActivityMainBinding
 
     private val adapter by lazy { MainRecyclerAdapter(this) }
@@ -61,12 +55,13 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-        title = getString(R.string.title_server)
-        setSupportActionBar(binding.toolbar)
+        title = getString(R.string.app_name)
+        actionBar?.subtitle = "${getString(R.string.title_server)} · v${BuildConfig.VERSION_NAME}"
 
-        binding.fab.setOnClickListener {
+        binding.connectButton.setOnClickListener {
             if (mainViewModel.isRunning.value == true) {
-                Utils.stopVService(this)
+                binding.connectButton.setText(R.string.connection_test_testing)
+                mainViewModel.testCurrentServerRealPing()
             } else if (settingsStorage?.decodeString(AppConfig.PREF_MODE) ?: "VPN" == "VPN") {
                 val intent = VpnService.prepare(this)
                 if (intent == null) {
@@ -78,12 +73,12 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                 startV2Ray()
             }
         }
-        binding.layoutTest.setOnClickListener {
+        binding.connectButton.setOnLongClickListener {
             if (mainViewModel.isRunning.value == true) {
-                binding.tvTestState.text = getString(R.string.connection_test_testing)
-                mainViewModel.testCurrentServerRealPing()
+                Utils.stopVService(this)
+                true
             } else {
-//                tv_test_state.text = getString(R.string.connection_test_fail)
+                false
             }
         }
 
@@ -95,13 +90,6 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         mItemTouchHelper = ItemTouchHelper(callback)
         mItemTouchHelper?.attachToRecyclerView(binding.recyclerView)
 
-
-        val toggle = ActionBarDrawerToggle(
-                this, binding.drawerLayout, binding.toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        binding.drawerLayout.addDrawerListener(toggle)
-        toggle.syncState()
-        binding.navView.setNavigationItemSelectedListener(this)
-        binding.version.text = "v${BuildConfig.VERSION_NAME} (${Libv2ray.checkVersionX()})"
 
         setupViewModelObserver()
         migrateLegacy()
@@ -116,18 +104,23 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                 adapter.notifyDataSetChanged()
             }
         }
-        mainViewModel.updateTestResultAction.observe(this) { binding.tvTestState.text = it }
+        mainViewModel.updateTestResultAction.observe(this) {
+            if (mainViewModel.isRunning.value == true) {
+                binding.connectButton.text = it
+            }
+        }
+        mainViewModel.trafficStatsAction.observe(this) {
+            binding.tvTraffic.text = it
+            binding.tvTraffic.visibility = if (it.isNullOrBlank()) View.GONE else View.VISIBLE
+        }
         mainViewModel.isRunning.observe(this) {
             val isRunning = it ?: return@observe
             adapter.isRunning = isRunning
             if (isRunning) {
-                binding.fab.setImageResource(R.drawable.ic_v)
-                binding.tvTestState.text = getString(R.string.connection_connected)
-                binding.layoutTest.isFocusable = true
+                binding.connectButton.setText(R.string.connection_connected_hold)
             } else {
-                binding.fab.setImageResource(R.drawable.ic_v_idle)
-                binding.tvTestState.text = getString(R.string.connection_not_connected)
-                binding.layoutTest.isFocusable = false
+                binding.connectButton.setText(R.string.action_connect)
+                binding.tvTraffic.visibility = View.GONE
             }
             hideCircle()
         }
@@ -236,6 +229,20 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
         R.id.ping_all -> {
             mainViewModel.testAllTcping()
+            true
+        }
+
+        R.id.sub_setting -> {
+            startActivity(Intent(this, SubSettingActivity::class.java))
+            true
+        }
+        R.id.settings -> {
+            startActivity(Intent(this, SettingsActivity::class.java)
+                    .putExtra("isRunning", mainViewModel.isRunning.value == true))
+            true
+        }
+        R.id.logcat -> {
+            startActivity(Intent(this, LogcatActivity::class.java))
             true
         }
 
@@ -506,55 +513,11 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
     }
 
     fun showCircle() {
-        binding.fabProgressCircle.show()
+        binding.connectButton.isEnabled = false
+        binding.connectButton.setText(R.string.connection_connecting)
     }
 
     fun hideCircle() {
-        try {
-            Observable.timer(300, TimeUnit.MILLISECONDS)
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe {
-                        if (binding.fabProgressCircle.isShown) {
-                            binding.fabProgressCircle.hide()
-                        }
-                    }
-        } catch (e: Exception) {
-        }
-    }
-
-    override fun onBackPressed() {
-        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
-        }
-    }
-
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Handle navigation view item clicks here.
-        when (item.itemId) {
-            //R.id.server_profile -> activityClass = MainActivity::class.java
-            R.id.sub_setting -> {
-                startActivity(Intent(this, SubSettingActivity::class.java))
-            }
-            R.id.settings -> {
-                startActivity(Intent(this, SettingsActivity::class.java)
-                        .putExtra("isRunning", mainViewModel.isRunning.value == true))
-            }
-            R.id.feedback -> {
-                Utils.openUri(this, AppConfig.v2rayNGIssues)
-            }
-            R.id.promotion -> {
-                Utils.openUri(this, AppConfig.promotionUrl)
-            }
-            R.id.donate -> {
-//                startActivity<InappBuyActivity>()
-            }
-            R.id.logcat -> {
-                startActivity(Intent(this, LogcatActivity::class.java))
-            }
-        }
-        binding.drawerLayout.closeDrawer(GravityCompat.START)
-        return true
+        binding.connectButton.isEnabled = true
     }
 }

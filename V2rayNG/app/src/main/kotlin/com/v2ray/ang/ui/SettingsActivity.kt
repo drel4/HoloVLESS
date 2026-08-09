@@ -2,7 +2,12 @@ package com.v2ray.ang.ui
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.preference.*
+import android.preference.CheckBoxPreference
+import android.preference.EditTextPreference
+import android.preference.ListPreference
+import android.preference.Preference
+import android.preference.PreferenceFragment
+import android.preference.PreferenceManager
 import android.text.TextUtils
 import android.view.View
 import androidx.activity.viewModels
@@ -22,12 +27,12 @@ class SettingsActivity : BaseActivity() {
 
         title = getString(R.string.title_settings)
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        actionBar?.setDisplayHomeAsUpEnabled(true)
 
         settingsViewModel.startListenPreferenceChange()
     }
 
-    class SettingsFragment : PreferenceFragmentCompat() {
+    class SettingsFragment : PreferenceFragment() {
         private val perAppProxy by lazy { findPreference(AppConfig.PREF_PER_APP_PROXY) as CheckBoxPreference }
         private val localDns by lazy { findPreference(AppConfig.PREF_LOCAL_DNS_ENABLED) }
         private val fakeDns by lazy { findPreference(AppConfig.PREF_FAKE_DNS_ENABLED) }
@@ -59,20 +64,21 @@ class SettingsActivity : BaseActivity() {
         private val mode by lazy { findPreference(AppConfig.PREF_MODE) as ListPreference }
 
         private fun restartProxy() {
-            Utils.stopVService(requireContext())
-            V2RayServiceManager.startV2Ray(requireContext())
+            Utils.stopVService(activity)
+            V2RayServiceManager.startV2Ray(activity)
         }
 
         private fun isRunning(): Boolean {
             return false //TODO no point of adding logic now since Settings will be changed soon
         }
 
-        override fun onCreatePreferences(bundle: Bundle?, s: String?) {
+        override fun onCreate(bundle: Bundle?) {
+            super.onCreate(bundle)
             addPreferencesFromResource(R.xml.pref_settings)
 
             perAppProxy.setOnPreferenceClickListener {
                 if (isRunning()) {
-                    Utils.stopVService(requireContext())
+                    Utils.stopVService(activity)
                 }
                 startActivity(Intent(activity, PerAppProxyActivity::class.java))
                 perAppProxy.isChecked = true
@@ -110,7 +116,7 @@ class SettingsActivity : BaseActivity() {
 
             routingCustom.setOnPreferenceClickListener {
                 if (isRunning())
-                    Utils.stopVService(requireContext())
+                    Utils.stopVService(activity)
                 startActivity(Intent(activity, RoutingSettingsActivity::class.java))
                 false
             }

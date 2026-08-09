@@ -29,7 +29,7 @@ class LogcatActivity : BaseActivity() {
 
         title = getString(R.string.title_logcat)
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        actionBar?.setDisplayHomeAsUpEnabled(true)
         logcat(false)
     }
 

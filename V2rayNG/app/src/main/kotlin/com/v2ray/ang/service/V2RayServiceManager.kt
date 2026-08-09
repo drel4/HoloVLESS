@@ -320,8 +320,7 @@ object V2RayServiceManager {
 
     fun startSpeedNotification() {
         if (mSubscription == null &&
-                v2rayPoint.isRunning &&
-                settingsStorage?.decodeBool(AppConfig.PREF_SPEED_ENABLED) == true) {
+                v2rayPoint.isRunning) {
             var lastZeroSpeed = false
             val outboundTags = currentConfig?.getAllOutboundTags()
             outboundTags?.remove(TAG_DIRECT)
@@ -349,7 +348,12 @@ object V2RayServiceManager {
                             }
                             appendSpeedString(text, TAG_DIRECT, directUplink / sinceLastQueryInSeconds,
                                     directDownlink / sinceLastQueryInSeconds)
-                            updateNotification(text.toString(), proxyTotal, directDownlink + directUplink)
+                            val trafficText = text.toString().trim()
+                            MessageUtil.sendMsg2UI(serviceControl?.get()?.getService() ?: return@subscribe,
+                                    AppConfig.MSG_TRAFFIC_UPDATE, trafficText)
+                            if (settingsStorage?.decodeBool(AppConfig.PREF_SPEED_ENABLED) == true) {
+                                updateNotification(trafficText, proxyTotal, directDownlink + directUplink)
+                            }
                         }
                         lastZeroSpeed = zeroSpeed
                         lastQueryTime = queryTime
@@ -360,11 +364,9 @@ object V2RayServiceManager {
     private fun appendSpeedString(text: StringBuilder, name: String?, up: Double, down: Double) {
         var n = name ?: "no tag"
         n = n.substring(0, min(n.length, 6))
-        text.append(n)
-        for (i in n.length..6 step 2) {
-            text.append("\t")
-        }
-        text.append("•  ${up.toLong().toSpeedString()}↑  ${down.toLong().toSpeedString()}↓\n")
+        val upText = up.toLong().toSpeedString().replace("\t", "")
+        val downText = down.toLong().toSpeedString().replace("\t", "")
+        text.append("$n  ↑ $upText  ↓ $downText\n")
     }
 
     fun stopSpeedNotification() {

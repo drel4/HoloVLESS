@@ -5,8 +5,7 @@ import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import com.blacksquircle.ui.language.json.JsonLanguage
+import android.app.AlertDialog
 import com.google.gson.Gson
 import com.tencent.mmkv.MMKV
 import com.v2ray.ang.R
@@ -38,14 +37,13 @@ class ServerCustomConfigActivity : BaseActivity() {
         setContentView(view)
         title = getString(R.string.title_server)
 
-        binding.editor.language = JsonLanguage()
         val config = MmkvManager.decodeServerConfig(editGuid)
         if (config != null) {
             bindingServer(config)
         } else {
             clearServer()
         }
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        actionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     /**
@@ -55,9 +53,9 @@ class ServerCustomConfigActivity : BaseActivity() {
         binding.etRemarks.text = Utils.getEditable(config.remarks)
         val raw = serverRawStorage?.decodeString(editGuid)
         if (raw.isNullOrBlank()) {
-            binding.editor.setTextContent(Utils.getEditable(config.fullConfig?.toPrettyPrinting().orEmpty()))
+            binding.editor.text = Utils.getEditable(config.fullConfig?.toPrettyPrinting().orEmpty())
         } else {
-            binding.editor.setTextContent(Utils.getEditable(raw))
+            binding.editor.text = Utils.getEditable(raw)
         }
         return true
     }

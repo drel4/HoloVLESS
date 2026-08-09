@@ -1,12 +1,13 @@
 package com.v2ray.ang.ui
 
-import android.graphics.Color
+import android.app.ActionBar
+import android.app.FragmentTransaction
 import android.os.Bundle
 import com.v2ray.ang.R
 import androidx.fragment.app.Fragment
-import com.google.android.material.tabs.TabLayoutMediator
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.databinding.ActivityRoutingSettingsBinding
+import androidx.viewpager2.widget.ViewPager2
 
 class RoutingSettingsActivity : BaseActivity() {
     private lateinit var binding: ActivityRoutingSettingsBinding
@@ -22,7 +23,7 @@ class RoutingSettingsActivity : BaseActivity() {
         setContentView(view)
 
         title = getString(R.string.routing_settings_title)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        actionBar?.setDisplayHomeAsUpEnabled(true)
 
         val fragments = ArrayList<Fragment>()
         fragments.add(RoutingSettingsFragment().newInstance(AppConfig.PREF_V2RAY_ROUTING_AGENT))
@@ -31,9 +32,24 @@ class RoutingSettingsActivity : BaseActivity() {
 
         val adapter = FragmentAdapter(this, fragments)
         binding.viewpager.adapter = adapter
-        binding.tablayout.setTabTextColors(Color.BLACK, Color.RED)
-        TabLayoutMediator(binding.tablayout, binding.viewpager) { tab, position ->
-            tab.text = titles[position]
-        }.attach()
+
+        actionBar?.let { bar ->
+            bar.navigationMode = ActionBar.NAVIGATION_MODE_TABS
+            titles.forEachIndexed { position, tabTitle ->
+                bar.addTab(bar.newTab().setText(tabTitle).setTabListener(object : ActionBar.TabListener {
+                    override fun onTabSelected(tab: ActionBar.Tab, transaction: FragmentTransaction?) {
+                        binding.viewpager.currentItem = position
+                    }
+
+                    override fun onTabUnselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
+                    override fun onTabReselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
+                }))
+            }
+        }
+        binding.viewpager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                actionBar?.setSelectedNavigationItem(position)
+            }
+        })
     }
 }

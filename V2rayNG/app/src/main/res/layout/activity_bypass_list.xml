@@ -23,7 +23,7 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:context=".ui.PerAppProxyActivity" />
 
-    <androidx.appcompat.widget.LinearLayoutCompat
+    <LinearLayout
         android:id="@+id/header_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -37,7 +37,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/bypass_list_header_height">
 
-            <androidx.appcompat.widget.SwitchCompat
+            <Switch
                 android:id="@+id/switch_per_app_proxy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -45,7 +45,7 @@
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true" />
 
-            <androidx.appcompat.widget.AppCompatTextView
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentLeft="true"
@@ -54,7 +54,7 @@
                 android:layout_toLeftOf="@id/switch_per_app_proxy"
                 android:layout_toStartOf="@id/switch_per_app_proxy"
                 android:text="@string/title_pref_per_app_proxy"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </RelativeLayout>
 
@@ -63,7 +63,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/bypass_list_header_height">
 
-            <androidx.appcompat.widget.SwitchCompat
+            <Switch
                 android:id="@+id/switch_bypass_apps"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -71,7 +71,7 @@
                 android:layout_alignParentRight="true"
                 android:layout_centerVertical="true" />
 
-            <androidx.appcompat.widget.AppCompatTextView
+            <TextView
                 android:id="@+id/tv_bypass_apps"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -81,7 +81,7 @@
                 android:layout_toLeftOf="@id/switch_bypass_apps"
                 android:layout_toStartOf="@id/switch_bypass_apps"
                 android:text="@string/switch_bypass_apps_mode"
-                android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </RelativeLayout>
 
@@ -89,11 +89,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/bypass_list_header_height">
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <androidx.appcompat.widget.AppCompatEditText
+                <EditText
                     android:id="@+id/et_search"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -102,12 +98,11 @@
                     android:inputType="text"
                     android:maxLines="1"
                     android:singleLine="true"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Small" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
 
         </RelativeLayout>
 
 
-    </androidx.appcompat.widget.LinearLayoutCompat>
+    </LinearLayout>
 
 </RelativeLayout>

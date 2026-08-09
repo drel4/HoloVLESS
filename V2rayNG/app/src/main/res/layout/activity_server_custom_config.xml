@@ -20,8 +20,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/server_lab_need_inbound"
-                android:textAppearance="@style/TextAppearance.AppCompat.Tooltip"
-                android:textColor="@color/fab_orange_dark" />
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="@color/colorPrimary" />
         </LinearLayout>
 
         <LinearLayout
@@ -34,7 +34,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/title_server"
-                android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
         </LinearLayout>
 
         <LinearLayout
@@ -66,14 +66,17 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/layout_margin_spacing"
                 android:text="@string/server_lab_content"
-                android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
-            <com.blacksquircle.ui.editorkit.widget.TextProcessor
+            <EditText
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="320dp"
                     android:gravity="top|start"
                     android:id="@+id/editor"
-                    android:layout_marginTop="@dimen/layout_margin_top_height" />
+                    android:layout_marginTop="@dimen/layout_margin_top_height"
+                    android:fontFamily="monospace"
+                    android:inputType="textMultiLine|textNoSuggestions"
+                    android:scrollbars="vertical" />
         </LinearLayout>
 
 

@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/bypass_list_header_height">
 
-        <androidx.appcompat.widget.SwitchCompat
+        <Switch
             android:id="@+id/switch_start_service"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -19,7 +19,7 @@
             android:layout_centerVertical="true"
             android:checked="true" />
 
-        <androidx.appcompat.widget.AppCompatTextView
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
@@ -28,7 +28,7 @@
             android:layout_toLeftOf="@id/switch_start_service"
             android:layout_toStartOf="@id/switch_start_service"
             android:text="@string/tasker_start_service"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
     </RelativeLayout>
 

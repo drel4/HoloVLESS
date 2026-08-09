@@ -31,7 +31,7 @@ class ScannerActivity : BaseActivity(), ZXingScannerView.ResultHandler {
 
         setContentView(mScannerView)                // Set the scanner view as the content view
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        actionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     public override fun onResume() {

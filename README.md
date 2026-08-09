@@ -1,6 +1,32 @@
-# v2rayNG
+# HoloVLESS
 
-A V2Ray client for Android, support [Xray core](https://github.com/XTLS/Xray-core) and [v2fly core](https://github.com/v2fly/v2ray-core)
+A native-Holo VLESS client for Android 4.x, based on v2rayNG and powered by
+modern [Xray-core](https://github.com/XTLS/Xray-core).
+
+## HoloVLESS modern build
+
+The active HoloVLESS build combines the API-19 modern-core experiment with a
+platform `Theme.Holo` interface. It uses Xray-core v26.3.27 and supports the
+tested VLESS REALITY, XHTTP, and post-quantum profile fields. The application
+manifest remains at minSdk 17, while the modern Go AAR declares minSdk 19;
+therefore this modern-core build is supported on Android 4.4/API 19 and newer.
+
+The UI uses the Android platform ActionBar, dialogs, preferences, switches,
+and other Holo widgets with the standard Holo-blue accent. It does not include
+AppCompat, Material Components, CardView, or a Material toolbar. The existing
+application icon is intentionally retained until a HoloVLESS icon is designed.
+
+The modern-core/Holo build was installed and tested on a Sony Xperia ZR C5503
+running Android 4.4.2. The supplied REALITY/XHTTP profile connected, Firefox
+loaded `https://myip.wtf`, and the expected VPN ISP was reported. The legacy
+baseline was also manually verified by the user on a Samsung Galaxy S5; the
+combined modern-core/Holo build has not yet received a separate Samsung test.
+
+See `docs/milestone6-modern-xray-api19.md` for the modern-core work and
+`docs/holovless-holo-ui.md` for the Holo redesign and verification record.
+
+HoloVLESS retains the upstream GNU General Public License version 3; see
+`LICENSE`. It is not relicensed.
 
 ## Holo legacy fork baseline
 

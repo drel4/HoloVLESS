@@ -7,7 +7,7 @@
     android:clickable="true"
     android:focusable="true">
 
-    <androidx.appcompat.widget.AppCompatImageView
+    <ImageView
         android:id="@+id/icon"
         android:layout_width="46dp"
         android:layout_height="46dp"
@@ -25,20 +25,20 @@
         android:paddingStart="@dimen/layout_margin_right_height"
         android:paddingEnd="@dimen/layout_margin_right_height">
 
-        <androidx.appcompat.widget.AppCompatTextView
+        <TextView
             android:id="@+id/name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-        <androidx.appcompat.widget.AppCompatTextView
+        <TextView
             android:id="@+id/package_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+            android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
 
 
-    <androidx.appcompat.widget.AppCompatCheckBox
+    <CheckBox
         android:id="@+id/check_box"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

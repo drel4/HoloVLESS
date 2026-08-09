@@ -20,7 +20,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/title_server"
-                android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
         </LinearLayout>
 
         <LinearLayout
@@ -126,7 +126,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/server_lab_more_function"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
         </LinearLayout>
 
         <LinearLayout
@@ -217,7 +217,7 @@
                 android:id="@+id/sp_stream_security"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/edit_height"
-                android:entries="@array/streamsecuritys" />
+                android:entries="@array/streamsecurityxs" />
 
         </LinearLayout>
 

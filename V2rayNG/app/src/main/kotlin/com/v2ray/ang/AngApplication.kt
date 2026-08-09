@@ -1,7 +1,7 @@
 package com.v2ray.ang
 
 import androidx.multidex.MultiDexApplication
-import androidx.preference.PreferenceManager
+import android.preference.PreferenceManager
 import com.tencent.mmkv.MMKV
 
 class AngApplication : MultiDexApplication() {

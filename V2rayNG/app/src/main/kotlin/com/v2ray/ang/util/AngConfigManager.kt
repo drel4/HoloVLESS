@@ -3,7 +3,7 @@ package com.v2ray.ang.util
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
-import androidx.preference.PreferenceManager
+import android.preference.PreferenceManager
 import android.text.TextUtils
 import com.google.gson.Gson
 import com.tencent.mmkv.MMKV

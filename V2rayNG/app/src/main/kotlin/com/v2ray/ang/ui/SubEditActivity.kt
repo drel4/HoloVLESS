@@ -1,7 +1,7 @@
 package com.v2ray.ang.ui
 
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog
+import android.app.AlertDialog
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
@@ -36,7 +36,7 @@ class SubEditActivity : BaseActivity() {
         } else {
             clearServer()
         }
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        actionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     /**

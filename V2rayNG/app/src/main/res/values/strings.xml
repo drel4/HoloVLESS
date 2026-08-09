@@ -11,6 +11,11 @@
 
     <!-- Notifications -->
     <string name="notification_action_stop_v2ray">Stop</string>
+    <string name="action_connect">Connect</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="menu_item_share">Share</string>
+    <string name="menu_item_edit">Edit</string>
+    <string name="menu_item_remove">Remove</string>
     <string name="toast_permission_denied">Unable to obtain the permission</string>
     <string name="notification_action_more">click for more</string>
     <string name="toast_services_start">Start Services</string>
@@ -127,13 +132,9 @@
     <string name="title_pref_local_dns_port">Local DNS port</string>
     <string name="summary_pref_local_dns_port">Local DNS port</string>
 
-    <string name="title_pref_feedback">Feedback</string>
-    <string name="summary_pref_feedback">Feedback enhancements or bugs to GitHub</string>
     <string name="summary_pref_tg_group">Join Telegram Group</string>
     <string name="toast_tg_app_not_found">Telegram app not found</string>
 
-    <string name="title_pref_promotion">Promotion</string>
-    <string name="summary_pref_promotion">Promotion,click for details(Donation can be removed)</string>
 
     <string name="title_mode">Mode</string>
     <string name="title_mode_help">Click me for more help</string>
@@ -174,6 +175,8 @@
     <string name="connection_test_fail">Internet Unavailable</string>
     <string name="connection_test_error_status_code">Error code: #%d</string>
     <string name="connection_connected">Connected, tap to check connection</string>
+    <string name="connection_connected_hold">Connected · tap to test · hold to disconnect</string>
+    <string name="connection_connecting">Connecting…</string>
     <string name="connection_not_connected">Not connected</string>
 
     <string-array name="share_method">

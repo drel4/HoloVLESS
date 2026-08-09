@@ -3,20 +3,16 @@ package com.v2ray.ang.ui
 import android.content.Intent
 import android.graphics.Color
 import androidx.core.content.ContextCompat
-import androidx.appcompat.app.AlertDialog
+import android.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.google.gson.Gson
 import com.tencent.mmkv.MMKV
-import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ItemQrcodeBinding
-import com.v2ray.ang.databinding.ItemRecyclerFooterBinding
 import com.v2ray.ang.databinding.ItemRecyclerMainBinding
 import com.v2ray.ang.dto.EConfigType
-import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.helper.ItemTouchHelperAdapter
 import com.v2ray.ang.helper.ItemTouchHelperViewHolder
@@ -32,18 +28,16 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         , ItemTouchHelperAdapter {
     companion object {
         private const val VIEW_TYPE_ITEM = 1
-        private const val VIEW_TYPE_FOOTER = 2
     }
 
     private var mActivity: MainActivity = activity
     private val mainStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_MAIN, MMKV.MULTI_PROCESS_MODE) }
-    private val subStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SUB, MMKV.MULTI_PROCESS_MODE) }
     private val share_method: Array<out String> by lazy {
         mActivity.resources.getStringArray(R.array.share_method)
     }
     var isRunning = false
 
-    override fun getItemCount() = mActivity.mainViewModel.serverList.size + 1
+    override fun getItemCount() = mActivity.mainViewModel.serverList.size
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         if (holder is MainViewHolder) {
@@ -61,13 +55,6 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
             } else {
                 holder.itemMainBinding.tvTestResult.setTextColor(ContextCompat.getColor(mActivity, R.color.colorPing))
             }
-            holder.itemMainBinding.tvSubscription.text = ""
-            val json = subStorage?.decodeString(config.subscriptionId)
-            if (!json.isNullOrBlank()) {
-                val sub = Gson().fromJson(json, SubscriptionItem::class.java)
-                holder.itemMainBinding.tvSubscription.text = sub.remarks
-            }
-
             var shareOptions = share_method.asList()
             when (config.configType) {
                 EConfigType.CUSTOM -> {
@@ -148,16 +135,6 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                 }
             }
         }
-        if (holder is FooterViewHolder) {
-            //if (activity?.defaultDPreference?.getPrefBoolean(AppConfig.PREF_INAPP_BUY_IS_PREMIUM, false)) {
-            if (true) {
-                holder.itemFooterBinding.layoutEdit.visibility = View.INVISIBLE
-            } else {
-                holder.itemFooterBinding.layoutEdit.setOnClickListener {
-                    Utils.openUri(mActivity, "${Utils.decode(AppConfig.promotionUrl)}?t=${System.currentTimeMillis()}")
-                }
-            }
-        }
     }
 
     private fun shareFullContent(guid: String) {
@@ -169,20 +146,11 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
-        return when (viewType) {
-            VIEW_TYPE_ITEM ->
-                MainViewHolder(ItemRecyclerMainBinding.inflate(LayoutInflater.from(parent.context), parent, false))
-            else ->
-                FooterViewHolder(ItemRecyclerFooterBinding.inflate(LayoutInflater.from(parent.context), parent, false))
-        }
+        return MainViewHolder(ItemRecyclerMainBinding.inflate(LayoutInflater.from(parent.context), parent, false))
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (position == mActivity.mainViewModel.serverList.size) {
-            VIEW_TYPE_FOOTER
-        } else {
-            VIEW_TYPE_ITEM
-        }
+        return VIEW_TYPE_ITEM
     }
 
     open class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -197,9 +165,6 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 
     class MainViewHolder(val itemMainBinding: ItemRecyclerMainBinding) :
             BaseViewHolder(itemMainBinding.root), ItemTouchHelperViewHolder
-
-    class FooterViewHolder(val itemFooterBinding: ItemRecyclerFooterBinding) :
-            BaseViewHolder(itemFooterBinding.root), ItemTouchHelperViewHolder
 
     override fun onItemDismiss(position: Int) {
         val guid = mActivity.mainViewModel.serverList.getOrNull(position) ?: return

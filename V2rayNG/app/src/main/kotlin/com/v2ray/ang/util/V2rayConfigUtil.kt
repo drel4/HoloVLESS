@@ -71,10 +71,6 @@ object V2rayConfigUtil {
         if (settingsStorage?.decodeBool(AppConfig.PREF_LOCAL_DNS_ENABLED) == true) {
             customLocalDns(v2rayConfig)
         }
-        if (settingsStorage?.decodeBool(AppConfig.PREF_SPEED_ENABLED) != true) {
-            v2rayConfig.stats = null
-            v2rayConfig.policy = null
-        }
         result.status = true
         result.content = v2rayConfig.toPrettyPrinting()
         return result
