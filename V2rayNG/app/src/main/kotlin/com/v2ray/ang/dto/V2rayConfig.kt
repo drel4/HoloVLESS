@@ -31,6 +31,7 @@ data class V2rayConfig(
 
         const val TLS = "tls"
         const val XTLS = "xtls"
+        const val REALITY = "reality"
         const val HTTP = "http"
     }
 
@@ -125,6 +126,8 @@ data class V2rayConfig(
                                       var quicSettings: QuicSettingBean? = null,
                                       var xtlsSettings: TlsSettingsBean? = null,
                                       var grpcSettings: GrpcSettingsBean? = null,
+                                      var xhttpSettings: XhttpSettingsBean? = null,
+                                      var realitySettings: TlsSettingsBean? = null,
                                       val dsSettings: Any? = null,
                                       val sockopt: Any? = null
         ) {
@@ -172,6 +175,10 @@ data class V2rayConfig(
             data class HttpSettingsBean(var host: List<String> = ArrayList(),
                                         var path: String = "")
 
+            data class XhttpSettingsBean(var host: String = "",
+                                         var path: String = "",
+                                         var mode: String? = null)
+
             data class TlsSettingsBean(var allowInsecure: Boolean = false,
                                        var serverName: String = "",
                                        val alpn: List<String>? = null,
@@ -179,10 +186,14 @@ data class V2rayConfig(
                                        val maxVersion: String? = null,
                                        val preferServerCipherSuites: Boolean? = null,
                                        val cipherSuites: String? = null,
-                                       val fingerprint: String? = null,
+                                       var fingerprint: String? = null,
                                        val certificates: List<Any>? = null,
                                        val disableSystemRoot: Boolean? = null,
-                                       val enableSessionResumption: Boolean? = null)
+                                       val enableSessionResumption: Boolean? = null,
+                                       var publicKey: String? = null,
+                                       var shortId: String? = null,
+                                       var spiderX: String? = null,
+                                       var mldsa65Verify: String? = null)
 
             data class QuicSettingBean(var security: String = "none",
                                        var key: String = "",
@@ -254,20 +265,39 @@ data class V2rayConfig(
                         sni = host ?: ""
                         grpcSettings = grpcSetting
                     }
+                    "xhttp", "splithttp" -> {
+                        network = "xhttp"
+                        val xhttpSetting = XhttpSettingsBean()
+                        xhttpSetting.host = host ?: ""
+                        xhttpSetting.path = path ?: "/"
+                        xhttpSetting.mode = mode
+                        sni = xhttpSetting.host
+                        xhttpSettings = xhttpSetting
+                    }
                 }
                 return sni
             }
 
-            fun populateTlsSettings(streamSecurity: String, allowInsecure: Boolean, sni: String) {
+            fun populateTlsSettings(streamSecurity: String, allowInsecure: Boolean, sni: String,
+                                    fingerprint: String? = null, publicKey: String? = null,
+                                    shortId: String? = null, spiderX: String? = null,
+                                    mldsa65Verify: String? = null) {
                 security = streamSecurity
                 val tlsSetting = TlsSettingsBean(
                         allowInsecure = allowInsecure,
-                        serverName = sni
+                        serverName = sni,
+                        fingerprint = fingerprint,
+                        publicKey = publicKey,
+                        shortId = shortId,
+                        spiderX = spiderX,
+                        mldsa65Verify = mldsa65Verify
                 )
                 if (security == TLS) {
                     tlsSettings = tlsSetting
                 } else if (security == XTLS) {
                     xtlsSettings = tlsSetting
+                } else if (security == REALITY) {
+                    realitySettings = tlsSetting
                 }
             }
         }
@@ -360,6 +390,12 @@ data class V2rayConfig(
                         listOf(if (grpcSetting.multiMode == true) "multi" else "gun",
                                 "",
                                 grpcSetting.serviceName)
+                    }
+                    "xhttp" -> {
+                        val xhttpSetting = streamSettings?.xhttpSettings ?: return null
+                        listOf(xhttpSetting.mode.orEmpty(),
+                                xhttpSetting.host,
+                                xhttpSetting.path)
                     }
                     else -> null
                 }

@@ -11,11 +11,11 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/sys/unix"
 	v2net "github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/features/dns"
 	"github.com/xtls/xray-core/features/outbound"
 	v2internet "github.com/xtls/xray-core/transport/internet"
+	"golang.org/x/sys/unix"
 )
 
 type protectSet interface {
@@ -190,12 +190,16 @@ func (d *ProtectedDialer) PrepareDomain(domainName string, closeCh <-chan struct
 	}
 }
 
-func (d *ProtectedDialer) getFd(network v2net.Network) (fd int, err error) {
+func (d *ProtectedDialer) getFd(network v2net.Network, ip net.IP) (fd int, err error) {
+	domain := unix.AF_INET6
+	if ip.To4() != nil {
+		domain = unix.AF_INET
+	}
 	switch network {
 	case v2net.Network_TCP:
-		fd, err = unix.Socket(unix.AF_INET6, unix.SOCK_STREAM, unix.IPPROTO_TCP)
+		fd, err = unix.Socket(domain, unix.SOCK_STREAM, unix.IPPROTO_TCP)
 	case v2net.Network_UDP:
-		fd, err = unix.Socket(unix.AF_INET6, unix.SOCK_DGRAM, unix.IPPROTO_UDP)
+		fd, err = unix.Socket(domain, unix.SOCK_DGRAM, unix.IPPROTO_UDP)
 	default:
 		err = fmt.Errorf("unknow network")
 	}
@@ -229,12 +233,12 @@ func (d *ProtectedDialer) Dial(ctx context.Context,
 			}
 		}
 
-		fd, err := d.getFd(dest.Network)
+		curIP := d.vServer.currentIP()
+		fd, err := d.getFd(dest.Network, curIP)
 		if err != nil {
 			return nil, err
 		}
 
-		curIP := d.vServer.currentIP()
 		conn, err := d.fdConn(ctx, curIP, d.vServer.Port, fd)
 		if err != nil {
 			d.vServer.NextIP()
@@ -251,7 +255,7 @@ func (d *ProtectedDialer) Dial(ctx context.Context,
 		return nil, err
 	}
 
-	fd, err := d.getFd(dest.Network)
+	fd, err := d.getFd(dest.Network, resolved.IPs[0])
 	if err != nil {
 		return nil, err
 	}
@@ -268,10 +272,10 @@ func (d *ProtectedDialer) fdConn(ctx context.Context, ip net.IP, port int, fd in
 	// call android VPN service to "protect" the fd connecting straight out
 	d.Protect(fd)
 
-	sa := &unix.SockaddrInet6{
-		Port: port,
+	sa, err := sockaddrForIP(ip, port)
+	if err != nil {
+		return nil, err
 	}
-	copy(sa.Addr[:], ip)
 
 	if err := unix.Connect(fd, sa); err != nil {
 		log.Printf("fdConn unix.Connect err, Close Fd: %d Err: %v", fd, err)
@@ -293,4 +297,18 @@ func (d *ProtectedDialer) fdConn(ctx context.Context, ip net.IP, port int, fd in
 	}
 
 	return conn, nil
+}
+
+func sockaddrForIP(ip net.IP, port int) (unix.Sockaddr, error) {
+	if ip4 := ip.To4(); ip4 != nil {
+		sa := &unix.SockaddrInet4{Port: port}
+		copy(sa.Addr[:], ip4)
+		return sa, nil
+	}
+	if ip6 := ip.To16(); ip6 != nil {
+		sa := &unix.SockaddrInet6{Port: port}
+		copy(sa.Addr[:], ip6)
+		return sa, nil
+	}
+	return nil, fmt.Errorf("invalid IP address")
 }

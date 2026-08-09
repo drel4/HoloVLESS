@@ -1,7 +1,8 @@
 # Milestone 6: modern Xray-core API 19 experiment
 
-Status: stopped after the first real-device runtime failure, as required by the
-Milestone 6 fallback rule. The Phase 2 baseline remains the supported build.
+Status: Milestone 6b passed its real-device end-to-end gate on the Xperia ZR.
+The result remains isolated on the modern-core experiment branch; the Phase 2
+baseline remains the supported build until the Holo redesign is stable.
 
 ## Inputs and isolated branch
 
@@ -70,3 +71,52 @@ settings required by the current core. The connection never reached the
 `myip.wtf` verification step. Per the milestone instruction, no further attempt
 was made to extend or force the legacy profile generator; the experiment was
 stopped and the working Phase 2 baseline was restored.
+
+## Milestone 6b: modern profile support
+
+Milestone 6b authorized extending the old app model, link parser, and generated
+Xray JSON. The experiment now preserves the modern VLESS query values needed by
+the supplied profile:
+
+- REALITY: `fp`, `pbk`, `sid`, `spx`, and `pqv`
+- XHTTP: `path`, `host`, and `mode`
+
+The generated stream settings select `security: reality`, emit a populated
+`realitySettings`, and emit `xhttpSettings`. Query parsing also preserves
+base64-style values containing `=`. Synthetic unit tests cover query decoding
+and the REALITY/XHTTP JSON round trip; no supplied credential is embedded in
+the tests or repository.
+
+The first end-to-end attempt exposed a separate wrapper defect: the protected
+dialer always created an IPv6 socket even when the cached server address was
+IPv4. Current Go/Xray made that mismatch visible on KitKat as
+`network is unreachable`. The wrapper now selects `AF_INET` or `AF_INET6` from
+the resolved address and creates the matching sockaddr. Focused IPv4/IPv6 tests
+cover the conversion.
+
+The final build passed:
+
+```text
+go test ./VPN -run TestSockaddrForIP
+go test -run '^$' ./...
+./gradlew clean testDebugUnitTest assembleDebug --no-daemon
+```
+
+The corrected AAR SHA-256 is
+`42962d6dd19203ed86c7fcad3d15eaf5159753bd2866a8c84b769b8fe6b49e21`.
+The corrected `armeabi-v7a` APK SHA-256 is
+`9d5de60fe109ca90650be8e2bc70a4de04c5d54651740e7770b74f398fbcff72`.
+
+## Milestone 6b Xperia result
+
+After a clean device restart, the exact supplied REALITY/XHTTP/PQ profile
+started Xray 26.3.27, launched tun2socks, and passed TCP and UDP traffic through
+the protected server connection. `https://myip.wtf` loaded and reported the VPN
+exit at `2.27.28.55`, hostname `furankfurt.furry.ru.net`, and ISP
+`Senko Digital LLC`.
+
+Local DNS remained disabled and Remote DNS remained blank. The separate
+`VPN DNS (only IPv4/v6)` field was explicitly restored to the base app's
+shipped `1.1.1.1` default. This was necessary because storing an empty Remote
+DNS preference masks the Kotlin fallback and otherwise makes KitKat send DNS
+queries to the private Wi-Fi router through the remote VPN exit.

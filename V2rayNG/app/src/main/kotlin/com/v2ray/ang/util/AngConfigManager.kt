@@ -25,6 +25,20 @@ object AngConfigManager {
     private val settingsStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SETTING, MMKV.MULTI_PROCESS_MODE) }
     private val subStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SUB, MMKV.MULTI_PROCESS_MODE) }
 
+    internal fun parseQueryParameters(rawQuery: String?): Map<String, String> {
+        if (rawQuery.isNullOrEmpty()) {
+            return emptyMap()
+        }
+        return rawQuery.split("&")
+                .filter { it.isNotEmpty() }
+                .associate { parameter ->
+                    val separator = parameter.indexOf('=')
+                    val key = if (separator >= 0) parameter.substring(0, separator) else parameter
+                    val value = if (separator >= 0) parameter.substring(separator + 1) else ""
+                    Utils.urlDecode(key) to Utils.urlDecode(value)
+                }
+    }
+
     /**
      * Legacy loading config
      */
@@ -294,8 +308,7 @@ object AngConfigManager {
                 config.outboundBean?.streamSettings?.populateTlsSettings(TLS, allowInsecure, sni)
             } else if (str.startsWith(EConfigType.VLESS.protocolScheme)) {
                 val uri = URI(str)
-                val queryParam = uri.rawQuery.split("&")
-                    .associate { it.split("=").let { (k, v) -> k to Utils.urlDecode(v) } }
+                val queryParam = parseQueryParameters(uri.rawQuery)
                 config = ServerConfig.create(EConfigType.VLESS)
                 val streamSetting = config.outboundBean?.streamSettings ?: return -1
                 config.remarks = uri.fragment ?: ""
@@ -310,7 +323,9 @@ object AngConfigManager {
                 val sni = streamSetting.populateTransportSettings(queryParam["type"] ?: "tcp", queryParam["headerType"],
                         queryParam["host"], queryParam["path"], queryParam["seed"], queryParam["quicSecurity"], queryParam["key"],
                         queryParam["mode"], queryParam["serviceName"])
-                streamSetting.populateTlsSettings(queryParam["security"] ?: "", allowInsecure, queryParam["sni"] ?: sni)
+                streamSetting.populateTlsSettings(queryParam["security"] ?: "", allowInsecure,
+                        queryParam["sni"] ?: sni, queryParam["fp"], queryParam["pbk"],
+                        queryParam["sid"], queryParam["spx"], queryParam["pqv"])
             }
             if (config == null){
                 return R.string.toast_incorrect_protocol
@@ -446,9 +461,24 @@ object AngConfigManager {
                     dicQuery["encryption"] = if (outbound.getSecurityEncryption().isNullOrEmpty()) "none"
                     else outbound.getSecurityEncryption().orEmpty()
                     dicQuery["security"] = streamSetting.security.ifEmpty { "none" }
-                    (streamSetting.tlsSettings?: streamSetting.xtlsSettings)?.let { tlsSetting ->
+                    (streamSetting.tlsSettings ?: streamSetting.xtlsSettings ?: streamSetting.realitySettings)?.let { tlsSetting ->
                         if (!TextUtils.isEmpty(tlsSetting.serverName)) {
                             dicQuery["sni"] = tlsSetting.serverName
+                        }
+                        if (!TextUtils.isEmpty(tlsSetting.fingerprint)) {
+                            dicQuery["fp"] = tlsSetting.fingerprint.orEmpty()
+                        }
+                        if (!TextUtils.isEmpty(tlsSetting.publicKey)) {
+                            dicQuery["pbk"] = tlsSetting.publicKey.orEmpty()
+                        }
+                        if (!TextUtils.isEmpty(tlsSetting.shortId)) {
+                            dicQuery["sid"] = tlsSetting.shortId.orEmpty()
+                        }
+                        if (!TextUtils.isEmpty(tlsSetting.spiderX)) {
+                            dicQuery["spx"] = Utils.urlEncode(tlsSetting.spiderX.orEmpty())
+                        }
+                        if (!TextUtils.isEmpty(tlsSetting.mldsa65Verify)) {
+                            dicQuery["pqv"] = tlsSetting.mldsa65Verify.orEmpty()
                         }
                     }
                     dicQuery["type"] = streamSetting.network.ifEmpty { V2rayConfig.DEFAULT_NETWORK }
@@ -492,6 +522,17 @@ object AngConfigManager {
                             "grpc" -> {
                                 dicQuery["mode"] = transportDetails[0]
                                 dicQuery["serviceName"] = transportDetails[2]
+                            }
+                            "xhttp" -> {
+                                if (!TextUtils.isEmpty(transportDetails[0])) {
+                                    dicQuery["mode"] = transportDetails[0]
+                                }
+                                if (!TextUtils.isEmpty(transportDetails[1])) {
+                                    dicQuery["host"] = Utils.urlEncode(transportDetails[1])
+                                }
+                                if (!TextUtils.isEmpty(transportDetails[2])) {
+                                    dicQuery["path"] = Utils.urlEncode(transportDetails[2])
+                                }
                             }
                         }
                     }

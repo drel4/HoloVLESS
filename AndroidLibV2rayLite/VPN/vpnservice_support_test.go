@@ -10,7 +10,34 @@ import (
 	"time"
 
 	v2net "github.com/xtls/xray-core/common/net"
+	"golang.org/x/sys/unix"
 )
+
+func TestSockaddrForIP(t *testing.T) {
+	ipv4, err := sockaddrForIP(net.ParseIP("192.0.2.1"), 443)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sa4, ok := ipv4.(*unix.SockaddrInet4)
+	if !ok {
+		t.Fatalf("expected IPv4 sockaddr, got %T", ipv4)
+	}
+	if sa4.Port != 443 || sa4.Addr != [4]byte{192, 0, 2, 1} {
+		t.Fatalf("unexpected IPv4 sockaddr: %#v", sa4)
+	}
+
+	ipv6, err := sockaddrForIP(net.ParseIP("2001:db8::1"), 8443)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sa6, ok := ipv6.(*unix.SockaddrInet6)
+	if !ok {
+		t.Fatalf("expected IPv6 sockaddr, got %T", ipv6)
+	}
+	if sa6.Port != 8443 || sa6.Addr[0] != 0x20 || sa6.Addr[1] != 0x01 {
+		t.Fatalf("unexpected IPv6 sockaddr: %#v", sa6)
+	}
+}
 
 type fakeSupportSet struct{}
 
