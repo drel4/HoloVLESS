@@ -105,7 +105,7 @@ go test -run '^$' ./...
 The corrected AAR SHA-256 is
 `6dab55670b0c2c984ee7591d46ca422f8ceaa646d2b4e952422d4b51e6d4df6a`.
 The corrected `armeabi-v7a` APK SHA-256 is
-`63d1e84a61270429dc8cd55d1ec8cab3267076e30e42ce0f88e91c186dd0dc7c`.
+`78d3342af93fc059e48fc0e0c11ef5cc23d6097a6ca294d0985d8887a814de42`.
 
 The binding also exposes a small HTTPS text-fetch helper backed by Go's
 `net/http` and `crypto/tls`. HoloVLESS uses it for subscription downloads on
