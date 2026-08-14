@@ -37,6 +37,8 @@ remain available from the overflow menu.
 Profile metadata is decoded when the stored list is reloaded and retained in
 memory; switching group tabs only filters that cache and performs no
 subscription request or repeated MMKV/JSON decode.
+The overflow “Update subscription” action is hidden on the ungrouped tab and
+targets only the subscription represented by the selected group tab.
 The bottom status and action controls are one flat edge-to-edge Holo footer:
 tap while stopped to connect, tap while running to test the connection, and
 hold while running to disconnect.
@@ -71,7 +73,7 @@ BUILD SUCCESSFUL
 
 The final `armeabi-v7a` debug APK is
 `artifacts/holo/HoloVLESS-modern-api19-debug.apk` in the workspace and has
-SHA-256 `3087b9221fc279ef422a29ecea71a866dd1281a5a396cb396f307c5ff1cc0952`.
+SHA-256 `824970f6f2aa81cf6f83c661f82100382609240af6cca0250bd47c8f03c201ba`.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern

@@ -172,6 +172,7 @@ class MainActivity : BaseActivity() {
                 override fun onTabSelected(tab: ActionBar.Tab, transaction: FragmentTransaction?) {
                     selectedGroupId = tab.tag as String
                     mainViewModel.setServerFilter(selectedGroupId)
+                    invalidateOptionsMenu()
                 }
                 override fun onTabUnselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
                 override fun onTabReselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
@@ -217,6 +218,11 @@ class MainActivity : BaseActivity() {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
         return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu?.findItem(R.id.sub_update)?.isVisible = !selectedGroupId.isNullOrEmpty()
+        return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
@@ -266,7 +272,7 @@ class MainActivity : BaseActivity() {
 //        }
 
         R.id.sub_update -> {
-            importConfigViaSub()
+            selectedGroupId?.takeIf { it.isNotEmpty() }?.let { importConfigViaSub(it) }
             true
         }
 
@@ -569,37 +575,32 @@ class MainActivity : BaseActivity() {
     /**
      * import config from sub
      */
-    fun importConfigViaSub()
+    fun importConfigViaSub(subscriptionId: String)
             : Boolean {
         try {
+            val subscription = MmkvManager.decodeSubscriptions()
+                    .firstOrNull { it.first == subscriptionId }
+                    ?: return false
             toast(R.string.title_sub_update)
-            MmkvManager.decodeSubscriptions().forEach {
-                if (TextUtils.isEmpty(it.first)
-                        || TextUtils.isEmpty(it.second.remarks)
-                        || TextUtils.isEmpty(it.second.url)
-                ) {
-                    return@forEach
-                }
-                val url = it.second.url
-                if (!Utils.isValidUrl(url)) {
-                    return@forEach
-                }
-                GlobalScope.launch(Dispatchers.IO) {
-                    val configText = try {
-                        Utils.getUrlContentWithCustomUserAgent(url)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        launch(Dispatchers.Main) {
-                            toast("\"" + it.second.remarks + "\" " + getString(R.string.toast_failure))
-                        }
-                        return@launch
-                    }
+            val url = subscription.second.url
+            if (!Utils.isValidUrl(url)) return false
+            GlobalScope.launch(Dispatchers.IO) {
+                val configText = try {
+                    Utils.getUrlContentWithCustomUserAgent(url)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                     launch(Dispatchers.Main) {
-                        // Some subscription providers prefix their Base64 response with a
-                        // UTF-8 BOM, while others return a plain list of links. The shared
-                        // importer handles both forms and normalizes Base64 before decoding.
-                        importBatchConfig(configText, it.first)
+                        val groupName = Utils.subscriptionGroupName(url)
+                                .ifEmpty { subscription.second.remarks }
+                        toast("\"$groupName\" " + getString(R.string.toast_failure))
                     }
+                    return@launch
+                }
+                launch(Dispatchers.Main) {
+                    // Some subscription providers prefix their Base64 response with a
+                    // UTF-8 BOM, while others return a plain list of links. The shared
+                    // importer handles both forms and normalizes Base64 before decoding.
+                    importBatchConfig(configText, subscription.first)
                 }
             }
         } catch (e: Exception) {
