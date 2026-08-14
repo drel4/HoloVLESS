@@ -34,6 +34,9 @@ When subscriptions exist, native Holo ActionBar tabs filter the list into
 ungrouped configurations and one tab per subscription domain. The tab strip is
 hidden when there are no subscriptions; subscription management and updating
 remain available from the overflow menu.
+Profile metadata is decoded when the stored list is reloaded and retained in
+memory; switching group tabs only filters that cache and performs no
+subscription request or repeated MMKV/JSON decode.
 The bottom status and action controls are one flat edge-to-edge Holo footer:
 tap while stopped to connect, tap while running to test the connection, and
 hold while running to disconnect.
@@ -68,7 +71,7 @@ BUILD SUCCESSFUL
 
 The final `armeabi-v7a` debug APK is
 `artifacts/holo/HoloVLESS-modern-api19-debug.apk` in the workspace and has
-SHA-256 `78d3342af93fc059e48fc0e0c11ef5cc23d6097a6ca294d0985d8887a814de42`.
+SHA-256 `3087b9221fc279ef422a29ecea71a866dd1281a5a396cb396f307c5ff1cc0952`.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern

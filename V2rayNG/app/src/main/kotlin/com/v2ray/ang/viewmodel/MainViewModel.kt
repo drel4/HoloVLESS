@@ -54,21 +54,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun reloadServerList() {
         allServerList = MmkvManager.decodeServerList()
-        serverList = if (serverFilter == null) {
-            allServerList.toMutableList()
-        } else {
-            allServerList.filter { guid ->
-                MmkvManager.decodeServerConfig(guid)?.subscriptionId == serverFilter
-            }.toMutableList()
-        }
         updateCache()
-        updateListAction.value = -1
+        applyServerFilter()
     }
 
     fun setServerFilter(subscriptionId: String?) {
         if (serverFilter == subscriptionId) return
         serverFilter = subscriptionId
-        reloadServerList()
+        applyServerFilter()
     }
 
     fun removeServer(guid: String) {
@@ -95,7 +88,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } else {
             val filteredPositions = allServerList.indices.filter { index ->
                 val guid = allServerList[index]
-                MmkvManager.decodeServerConfig(guid)?.subscriptionId == serverFilter
+                getCachedServer(guid)?.subscriptionId == serverFilter
             }
             filteredPositions.forEachIndexed { index, position ->
                 allServerList[position] = serverList[index]
@@ -104,15 +97,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(allServerList))
     }
 
-    fun updateCache() {
+    private fun updateCache() {
         serversCache.clear()
-        GlobalScope.launch(Dispatchers.Default) {
-            serverList.forEach { guid ->
-                MmkvManager.decodeServerConfig(guid)?.let {
-                    serversCache[guid] = it
-                }
+        allServerList.forEach { guid ->
+            MmkvManager.decodeServerConfig(guid)?.let {
+                serversCache[guid] = it
             }
         }
+    }
+
+    private fun applyServerFilter() {
+        serverList = if (serverFilter == null) {
+            allServerList.toMutableList()
+        } else {
+            allServerList.filter { guid ->
+                getCachedServer(guid)?.subscriptionId == serverFilter
+            }.toMutableList()
+        }
+        updateListAction.value = -1
+    }
+
+    private fun getCachedServer(guid: String): ServerConfig? {
+        serversCache[guid]?.let { return it }
+        return MmkvManager.decodeServerConfig(guid)?.also { serversCache[guid] = it }
     }
 
     fun testAllPing() {
