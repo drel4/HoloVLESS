@@ -2,7 +2,6 @@ package com.v2ray.ang.ui
 
 import android.os.Bundle
 import android.app.AlertDialog
-import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
 import com.google.gson.Gson
@@ -43,7 +42,6 @@ class SubEditActivity : BaseActivity() {
      * bingding seleced server config
      */
     private fun bindingServer(subItem: SubscriptionItem): Boolean {
-        binding.etRemarks.text = Utils.getEditable(subItem.remarks)
         binding.etUrl.text = Utils.getEditable(subItem.url)
 
         return true
@@ -53,7 +51,6 @@ class SubEditActivity : BaseActivity() {
      * clear or init server config
      */
     private fun clearServer(): Boolean {
-        binding.etRemarks.text = null
         binding.etUrl.text = null
 
         return true
@@ -73,15 +70,11 @@ class SubEditActivity : BaseActivity() {
             subItem = SubscriptionItem()
         }
 
-        subItem.remarks = binding.etRemarks.text.toString().trim()
         subItem.url = binding.etUrl.text.toString().trim()
+        subItem.remarks = Utils.subscriptionGroupName(subItem.url)
 
-        if (TextUtils.isEmpty(subItem.remarks)) {
-            toast(R.string.sub_setting_remarks)
-            return false
-        }
-        if (TextUtils.isEmpty(subItem.url)) {
-            toast(R.string.sub_setting_url)
+        if (subItem.remarks.isEmpty()) {
+            toast(R.string.toast_invalid_url)
             return false
         }
 

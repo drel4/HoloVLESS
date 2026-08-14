@@ -17,6 +17,7 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.tbruyelle.rxpermissions.RxPermissions
 import com.tencent.mmkv.MMKV
 import com.v2ray.ang.AppConfig
@@ -33,7 +34,12 @@ import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import libv2ray.Libv2ray
 import me.drakeet.support.toast.ToastCompat
 import android.view.View
 
@@ -45,10 +51,19 @@ class MainActivity : BaseActivity() {
     private val settingsStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SETTING, MMKV.MULTI_PROCESS_MODE) }
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
-            startV2Ray()
+            pendingInternetChecks?.let { guids ->
+                pendingInternetChecks = null
+                runInternetChecks(guids)
+            } ?: startV2Ray()
+        } else {
+            pendingInternetChecks = null
         }
     }
     private var mItemTouchHelper: ItemTouchHelper? = null
+    private var selectedGroupId: String? = null
+    private var pendingInternetChecks: List<String>? = null
+    private var internetCheckJob: Job? = null
+    private var isCheckingProfiles = false
     val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,9 +73,9 @@ class MainActivity : BaseActivity() {
         setContentView(view)
         title = getString(R.string.app_name)
         actionBar?.subtitle = "v${BuildConfig.VERSION_NAME}"
-        setupMainTabs()
 
         binding.connectButton.setOnClickListener {
+            if (isCheckingProfiles) return@setOnClickListener
             if (mainViewModel.isRunning.value == true) {
                 binding.connectButton.setText(R.string.connection_test_testing)
                 mainViewModel.testCurrentServerRealPing()
@@ -94,6 +109,7 @@ class MainActivity : BaseActivity() {
 
 
         setupViewModelObserver()
+        setupMainTabs()
         migrateLegacy()
     }
 
@@ -142,23 +158,39 @@ class MainActivity : BaseActivity() {
 
     private fun setupMainTabs() {
         actionBar?.let { bar ->
+            val subscriptions = MmkvManager.decodeSubscriptions()
+            bar.removeAllTabs()
+            if (subscriptions.isEmpty()) {
+                selectedGroupId = null
+                bar.navigationMode = ActionBar.NAVIGATION_MODE_STANDARD
+                mainViewModel.setServerFilter(null)
+                return@let
+            }
+
             bar.navigationMode = ActionBar.NAVIGATION_MODE_TABS
+            val listener = object : ActionBar.TabListener {
+                override fun onTabSelected(tab: ActionBar.Tab, transaction: FragmentTransaction?) {
+                    selectedGroupId = tab.tag as String
+                    mainViewModel.setServerFilter(selectedGroupId)
+                }
+                override fun onTabUnselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
+                override fun onTabReselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
+            }
             bar.addTab(bar.newTab()
                     .setText(R.string.title_tab_configs)
-                    .setTabListener(object : ActionBar.TabListener {
-                        override fun onTabSelected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
-                        override fun onTabUnselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
-                        override fun onTabReselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
-                    }))
-            bar.addTab(bar.newTab()
-                    .setText(R.string.title_tab_subscriptions)
-                    .setTabListener(object : ActionBar.TabListener {
-                        override fun onTabSelected(tab: ActionBar.Tab, transaction: FragmentTransaction?) {
-                            startActivity(Intent(this@MainActivity, SubSettingActivity::class.java))
-                        }
-                        override fun onTabUnselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
-                        override fun onTabReselected(tab: ActionBar.Tab, transaction: FragmentTransaction?) = Unit
-                    }))
+                    .setTag("")
+                    .setTabListener(listener), false)
+            subscriptions.forEach { (id, subscription) ->
+                val groupName = Utils.subscriptionGroupName(subscription.url)
+                        .ifEmpty { subscription.remarks }
+                bar.addTab(bar.newTab()
+                        .setText(groupName)
+                        .setTag(id)
+                        .setTabListener(listener), false)
+            }
+            val selectedIndex = (0 until bar.tabCount)
+                    .firstOrNull { bar.getTabAt(it)?.tag == selectedGroupId } ?: 0
+            bar.setSelectedNavigationItem(selectedIndex)
         }
     }
 
@@ -174,9 +206,7 @@ class MainActivity : BaseActivity() {
 
     public override fun onResume() {
         super.onResume()
-        if (actionBar?.navigationMode == ActionBar.NAVIGATION_MODE_TABS) {
-            actionBar?.setSelectedNavigationItem(0)
-        }
+        setupMainTabs()
         mainViewModel.reloadServerList()
     }
 
@@ -249,8 +279,18 @@ class MainActivity : BaseActivity() {
             true
         }
 
-        R.id.ping_all -> {
-            mainViewModel.testAllTcping()
+        R.id.ping_profiles -> {
+            mainViewModel.testAllPing()
+            true
+        }
+
+        R.id.check_profiles -> {
+            checkProfiles(mainViewModel.serverList.toList())
+            true
+        }
+
+        R.id.sub_setting -> {
+            startActivity(Intent(this, SubSettingActivity::class.java))
             true
         }
 
@@ -284,6 +324,110 @@ class MainActivity : BaseActivity() {
 //            true
 //        }
         else -> super.onOptionsItemSelected(item)
+    }
+
+    fun showProfileTestMenu(guid: String) {
+        AlertDialog.Builder(this)
+                .setItems(arrayOf(
+                        getString(R.string.title_ping_profile),
+                        getString(R.string.title_check_profile))) { _, which ->
+                    if (which == 0) {
+                        mainViewModel.testPing(guid)
+                    } else {
+                        checkProfiles(listOf(guid))
+                    }
+                }
+                .show()
+    }
+
+    private fun checkProfiles(guids: List<String>) {
+        if (guids.isEmpty()) {
+            toast(R.string.toast_none_data)
+            return
+        }
+        if (internetCheckJob?.isActive == true) {
+            toast(R.string.connection_test_testing)
+            return
+        }
+        val vpnMode = (settingsStorage?.decodeString(AppConfig.PREF_MODE) ?: "VPN") == "VPN"
+        val permissionIntent = if (vpnMode) VpnService.prepare(this) else null
+        if (permissionIntent != null) {
+            pendingInternetChecks = guids
+            requestVpnPermission.launch(permissionIntent)
+        } else {
+            runInternetChecks(guids)
+        }
+    }
+
+    private fun runInternetChecks(guids: List<String>) {
+        internetCheckJob = lifecycleScope.launch {
+            val previousSelected = mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER).orEmpty()
+            val wasRunning = mainViewModel.isRunning.value == true
+            var successful = 0
+            isCheckingProfiles = true
+            try {
+                guids.forEachIndexed { index, guid ->
+                    binding.connectButton.text = getString(
+                            R.string.checking_profiles_progress, index + 1, guids.size)
+                    // Stop unconditionally: a profile may start its service process but
+                    // fail before the running-state broadcast reaches the activity.
+                    Utils.stopVService(this@MainActivity)
+                    waitForServiceState(false)
+                    mainStorage?.encode(MmkvManager.KEY_SELECTED_SERVER, guid)
+                    mainViewModel.updateListAction.value = -1
+                    V2RayServiceManager.startV2Ray(this@MainActivity)
+                    val started = waitForServiceState(true)
+                    val result = if (started) {
+                        delay(750)
+                        withContext(Dispatchers.IO) {
+                            try {
+                                Libv2ray.measureURLThroughSocks(
+                                        "https://myip.wtf", "127.0.0.1:10808")
+                            } catch (_: Exception) {
+                                -1L
+                            }
+                        }
+                    } else {
+                        -1L
+                    }
+                    if (result >= 0L) successful++
+                    MmkvManager.encodeServerTestDelayMillis(guid, result)
+                    mainViewModel.updateListAction.value = mainViewModel.serverList.indexOf(guid)
+                }
+            } finally {
+                withContext(NonCancellable) {
+                    Utils.stopVService(this@MainActivity)
+                    waitForServiceState(false)
+                    if (previousSelected.isNotEmpty()) {
+                        mainStorage?.encode(MmkvManager.KEY_SELECTED_SERVER, previousSelected)
+                    }
+                    if (wasRunning && previousSelected.isNotEmpty()) {
+                        V2RayServiceManager.startV2Ray(this@MainActivity)
+                        waitForServiceState(true)
+                    }
+                    mainViewModel.updateListAction.value = -1
+                    isCheckingProfiles = false
+                    internetCheckJob = null
+                    if (!isFinishing) {
+                        binding.connectButton.setText(if (mainViewModel.isRunning.value == true) {
+                            R.string.connection_connected_hold
+                        } else {
+                            R.string.action_connect
+                        })
+                        toast(getString(R.string.profiles_checked_result, successful, guids.size))
+                    }
+                }
+            }
+        }
+    }
+
+    private suspend fun waitForServiceState(running: Boolean, timeoutMillis: Long = 15000L): Boolean {
+        val attempts = (timeoutMillis / 200L).toInt()
+        repeat(attempts) {
+            if ((mainViewModel.isRunning.value == true) == running) return true
+            delay(200L)
+        }
+        return (mainViewModel.isRunning.value == true) == running
     }
 
 

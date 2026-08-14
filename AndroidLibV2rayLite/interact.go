@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -31,7 +32,8 @@ const (
 	assetperfix = "/dev/libv2rayfs0/asset"
 )
 
-/*V2RayPoint V2Ray Point Server
+/*
+V2RayPoint V2Ray Point Server
 This is territory of Go, so no getter and setters!
 */
 type V2RayPoint struct {
@@ -106,7 +108,7 @@ func (v *V2RayPoint) StopLoop() (err error) {
 	return
 }
 
-//Delegate Funcation
+// Delegate Funcation
 func (v *V2RayPoint) GetIsRunning() bool {
 	return v.status.IsRunning
 }
@@ -115,7 +117,7 @@ func (v *V2RayPoint) GetIsTRunning() bool {
 	return v.status.IsTRunning
 }
 
-//Delegate Funcation
+// Delegate Funcation
 func (v V2RayPoint) QueryStats(tag string, direct string) int64 {
 	if v.statsManager == nil {
 		return 0
@@ -208,7 +210,7 @@ func initV2Env() {
 	}
 }
 
-//Delegate Funcation
+// Delegate Funcation
 func TestConfig(ConfigureFileContent string) error {
 	initV2Env()
 	_, err := v2serial.LoadJSONConfig(strings.NewReader(ConfigureFileContent))
@@ -251,6 +253,58 @@ func FetchURL(urlStr string, userAgent string) (string, error) {
 	return string(body), nil
 }
 
+// MeasureURLThroughSocks verifies that an HTTP request can traverse the
+// profile exposed on a local SOCKS5 listener and returns elapsed milliseconds.
+func MeasureURLThroughSocks(urlStr string, socksAddress string) (int64, error) {
+	type measureResult struct {
+		elapsed int64
+		err     error
+	}
+
+	proxyURL, err := url.Parse("socks5://" + socksAddress)
+	if err != nil {
+		return -1, err
+	}
+	transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
+	defer transport.CloseIdleConnections()
+	client := &http.Client{Transport: transport, Timeout: 30 * time.Second}
+	req, err := http.NewRequest(http.MethodGet, urlStr, nil)
+	if err != nil {
+		return -1, err
+	}
+	req.Close = true
+	req.Header.Set("User-Agent", "HoloVLESS connectivity check")
+
+	resultChan := make(chan measureResult, 1)
+	go func() {
+		started := time.Now()
+		resp, requestErr := client.Do(req)
+		if requestErr != nil {
+			resultChan <- measureResult{-1, requestErr}
+			return
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+			resultChan <- measureResult{-1,
+				fmt.Errorf("connectivity check failed with HTTP status %d", resp.StatusCode)}
+			return
+		}
+		if _, requestErr = io.Copy(io.Discard, io.LimitReader(resp.Body, 1024*1024)); requestErr != nil {
+			resultChan <- measureResult{-1, requestErr}
+			return
+		}
+		resultChan <- measureResult{time.Since(started).Milliseconds(), nil}
+	}()
+
+	select {
+	case result := <-resultChan:
+		return result.elapsed, result.err
+	case <-time.After(20 * time.Second):
+		transport.CloseIdleConnections()
+		return -1, fmt.Errorf("connectivity check timed out")
+	}
+}
+
 /*NewV2RayPoint new V2RayPoint*/
 func NewV2RayPoint(s V2RayVPNServiceSupportsSet) *V2RayPoint {
 	initV2Env()
@@ -283,14 +337,16 @@ func (v V2RayPoint) runTun2socks() error {
 	return nil
 }
 
-/*CheckVersion int
+/*
+CheckVersion int
 This func will return libv2ray binding version.
 */
 func CheckVersion() int {
 	return CoreI.CheckVersion()
 }
 
-/*CheckVersionX string
+/*
+CheckVersionX string
 This func will return libv2ray binding version and V2Ray version used.
 */
 func CheckVersionX() string {

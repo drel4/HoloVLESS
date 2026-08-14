@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.v2ray.ang.databinding.ItemRecyclerSubSettingBinding
+import com.v2ray.ang.util.Utils
 
 class SubSettingRecyclerAdapter(val activity: SubSettingActivity) : RecyclerView.Adapter<SubSettingRecyclerAdapter.MainViewHolder>() {
 
@@ -16,7 +17,8 @@ class SubSettingRecyclerAdapter(val activity: SubSettingActivity) : RecyclerView
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
         val subId = mActivity.subscriptions[position].first
         val subItem = mActivity.subscriptions[position].second
-        holder.itemSubSettingBinding.tvName.text = subItem.remarks
+        holder.itemSubSettingBinding.tvName.text =
+                Utils.subscriptionGroupName(subItem.url).ifEmpty { subItem.remarks }
         holder.itemSubSettingBinding.tvUrl.text = subItem.url
         holder.itemView.setBackgroundColor(Color.TRANSPARENT)
 

@@ -18,6 +18,13 @@ class ModernVlessSettingsTest {
     }
 
     @Test
+    fun usesCompleteSubscriptionHostAsGroupName() {
+        assertEquals("vpn.smth.more.example.com", Utils.subscriptionGroupName(
+                "https://VPN.Smth.More.Example.com/path?token=secret"))
+        assertEquals("", Utils.subscriptionGroupName("not a subscription URL"))
+    }
+
+    @Test
     fun parsesRealityQueryParametersWithoutTruncatingValues() {
         val query = AngConfigManager.parseQueryParameters(
                 "pbk=test-public-key&sid=0123456789abcdef&fp=chrome&spx=%2Ftest%3Fa%3Db&pqv=test-pq-key")

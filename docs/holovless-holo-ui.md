@@ -30,8 +30,10 @@ logging entry points remain available. Optional live upload/download speed is
 kept in the service notification and follows its existing preference; it is no
 longer duplicated on the main screen. Notification updates retain one stable
 small icon instead of swapping between differently padded traffic icons.
-Configurations and subscriptions are exposed as native Holo ActionBar tabs;
-the subscription tab opens the existing group manager and add-profile flow.
+When subscriptions exist, native Holo ActionBar tabs filter the list into
+ungrouped configurations and one tab per subscription domain. The tab strip is
+hidden when there are no subscriptions; subscription management and updating
+remain available from the overflow menu.
 The bottom status and action controls are one flat edge-to-edge Holo footer:
 tap while stopped to connect, tap while running to test the connection, and
 hold while running to disconnect.
@@ -66,7 +68,7 @@ BUILD SUCCESSFUL
 
 The final `armeabi-v7a` debug APK is
 `artifacts/holo/HoloVLESS-modern-api19-debug.apk` in the workspace and has
-SHA-256 `70832b9005e3f36ab71a4fb0f7a8c0722091c02fcf329a986d23e9b622d9fce6`.
+SHA-256 `63d1e84a61270429dc8cd55d1ec8cab3267076e30e42ce0f88e91c186dd0dc7c`.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern
@@ -78,7 +80,12 @@ exception. The subscription editor and per-app selector use dark native Holo
 form surfaces. A supplied HTTPS subscription with a UTF-8 BOM was downloaded,
 decoded, imported, and retained after an app restart on KitKat. Unsupported
 protocol lines were ignored while supported VLESS and Trojan entries were
-imported. Local DNS remained off, Remote DNS remained blank, and
+imported. The supplied subscription produced a domain-named group tab, while
+the configurations tab retained only the two ungrouped profiles. The overflow
+menu exposes separate endpoint ping and routed internet-check actions, and a
+long press exposes the same actions for one profile. Internet checks request
+`myip.wtf` through each profile and enforce a hard timeout before restoring the
+previous selection and VPN state. Local DNS remained off, Remote DNS remained blank, and
 the separate stock VPN DNS field remained `1.1.1.1`.
 
 The generated proxy configuration remains excluded from logs. The provided

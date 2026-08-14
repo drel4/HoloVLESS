@@ -282,6 +282,21 @@ object Utils {
         return false
     }
 
+    fun subscriptionGroupName(urlStr: String?): String {
+        return try {
+            val url = URL(urlStr?.trim().orEmpty())
+            if ((url.protocol.equals("http", ignoreCase = true)
+                            || url.protocol.equals("https", ignoreCase = true))
+                    && url.host.isNotBlank()) {
+                url.host.lowercase(Locale.ROOT)
+            } else {
+                ""
+            }
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
     fun startVServiceFromToggle(context: Context): Boolean {
         if (mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER).isNullOrEmpty()) {
             context.toast(R.string.app_tile_first_use)
@@ -400,22 +415,17 @@ object Utils {
     /**
      * ping
      */
-    fun ping(url: String): String {
-        try {
-            val command = "/system/bin/ping -c 3 $url"
-            val process = Runtime.getRuntime().exec(command)
-            val allText = process.inputStream.bufferedReader().use { it.readText() }
-            if (allText.isNotBlank()) {
-                val tempInfo = allText.substring(allText.indexOf("min/avg/max/mdev") + 19)
-                val temps = tempInfo.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                if (temps.count() > 0 && temps[0].length < 10) {
-                    return temps[0].toFloat().toInt().toString() + "ms"
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+    fun ping(url: String): Long {
+        return try {
+            val address = InetAddress.getByName(url).hostAddress
+            val process = Runtime.getRuntime().exec(arrayOf("/system/bin/ping", "-c", "3", address))
+            val output = process.inputStream.bufferedReader().use { it.readText() }
+            process.waitFor()
+            val summary = Regex("=\\s*([0-9.]+)/([0-9.]+)/").find(output)
+            summary?.groupValues?.getOrNull(2)?.toFloatOrNull()?.toLong() ?: -1L
+        } catch (_: Exception) {
+            -1L
         }
-        return "-1ms"
     }
 
     /**

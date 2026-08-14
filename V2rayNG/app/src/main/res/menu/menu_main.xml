@@ -57,14 +57,24 @@
         android:title="@string/title_export_all"
         android:showAsAction="never" />
     <item
-        android:id="@+id/ping_all"
-        android:icon="@drawable/ic_share_white_24dp"
-        android:title="@string/title_ping_all_server"
+        android:id="@+id/sub_setting"
+        android:icon="@drawable/ic_subscriptions_white_24dp"
+        android:title="@string/title_sub_setting"
         android:showAsAction="never" />
     <item
         android:id="@+id/sub_update"
         android:icon="@drawable/ic_subscriptions_white_24dp"
         android:title="@string/title_sub_update"
+        android:showAsAction="never" />
+    <item
+        android:id="@+id/ping_profiles"
+        android:icon="@drawable/ic_share_white_24dp"
+        android:title="@string/title_ping_profiles"
+        android:showAsAction="never" />
+    <item
+        android:id="@+id/check_profiles"
+        android:icon="@drawable/ic_share_white_24dp"
+        android:title="@string/title_check_profiles"
         android:showAsAction="never" />
     <item
         android:id="@+id/settings"

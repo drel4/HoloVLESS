@@ -134,6 +134,10 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                     }
                 }
             }
+            holder.itemMainBinding.infoContainer.setOnLongClickListener {
+                mActivity.showProfileTestMenu(guid)
+                true
+            }
         }
     }
 

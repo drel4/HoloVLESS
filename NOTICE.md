@@ -13,7 +13,8 @@ the Android 4.x native-Holo interface, HoloVLESS branding,
 Russian localization, the API-19 modern Xray-core binding, VLESS
 REALITY/XHTTP/PQ profile support, generated-configuration log redaction,
 subscription navigation and old-Android HTTPS compatibility, BOM-tolerant
-subscription parsing, and reproducible native dependency packaging.
+subscription parsing, domain-based subscription groups, endpoint and routed
+connectivity diagnostics, and reproducible native dependency packaging.
 
 HoloVLESS is provided without warranty, as described by GPL-3.0 sections 15
 and 16. The HoloVLESS project does not provide a warranty on behalf of the

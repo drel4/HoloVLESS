@@ -151,13 +151,18 @@
     <string name="logcat_copy">Copy</string>
     <string name="logcat_delete">Delete</string>
     <string name="title_export_all">Export non-custom configs to clipboard</string>
-    <string name="title_sub_setting">Subscription setting</string>
+    <string name="title_sub_setting">Subscriptions</string>
     <string name="title_tab_configs">Configurations</string>
     <string name="title_tab_subscriptions">Subscriptions</string>
     <string name="sub_setting_remarks">remarks</string>
     <string name="sub_setting_url">URL</string>
     <string name="title_sub_update">Update subscription</string>
-    <string name="title_ping_all_server">Tcping all configuration</string>
+    <string name="title_ping_profiles">Ping profiles</string>
+    <string name="title_check_profiles">Check profiles</string>
+    <string name="title_ping_profile">Ping profile</string>
+    <string name="title_check_profile">Check profile</string>
+    <string name="checking_profiles_progress">Checking profile %1$d of %2$d…</string>
+    <string name="profiles_checked_result">Profiles working: %1$d/%2$d</string>
 
     <string name="tasker_start_service">Start Service</string>
     <string name="tasker_setting_confirm">Confirm</string>

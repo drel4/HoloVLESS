@@ -132,7 +132,12 @@
     <string name="sub_setting_remarks">Название</string>
     <string name="sub_setting_url">URL</string>
     <string name="title_sub_update">Обновить подписку</string>
-    <string name="title_ping_all_server">Проверить профили</string>
+    <string name="title_ping_profiles">Пинг профилей</string>
+    <string name="title_check_profiles">Проверить профили</string>
+    <string name="title_ping_profile">Пинг профиля</string>
+    <string name="title_check_profile">Проверить профиль</string>
+    <string name="checking_profiles_progress">Проверка профиля %1$d из %2$d…</string>
+    <string name="profiles_checked_result">Рабочих профилей: %1$d/%2$d</string>
     <string name="tasker_start_service">Запуск службы</string>
     <string name="tasker_setting_confirm">Подтвердить</string>
     <string name="routing_settings_title">Маршрутизация</string>

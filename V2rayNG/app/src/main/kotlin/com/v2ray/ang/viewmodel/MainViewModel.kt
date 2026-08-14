@@ -27,7 +27,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val mainStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_MAIN, MMKV.MULTI_PROCESS_MODE) }
     private val serverRawStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SERVER_RAW, MMKV.MULTI_PROCESS_MODE) }
 
-    var serverList = MmkvManager.decodeServerList()
+    private var allServerList = MmkvManager.decodeServerList()
+    private var serverFilter: String? = null
+    var serverList = allServerList.toMutableList()
         private set
     val serversCache = ConcurrentHashMap<String, ServerConfig>()
     val isRunning by lazy { MutableLiveData<Boolean>() }
@@ -51,13 +53,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun reloadServerList() {
-        serverList = MmkvManager.decodeServerList()
+        allServerList = MmkvManager.decodeServerList()
+        serverList = if (serverFilter == null) {
+            allServerList.toMutableList()
+        } else {
+            allServerList.filter { guid ->
+                MmkvManager.decodeServerConfig(guid)?.subscriptionId == serverFilter
+            }.toMutableList()
+        }
         updateCache()
         updateListAction.value = -1
     }
 
+    fun setServerFilter(subscriptionId: String?) {
+        if (serverFilter == subscriptionId) return
+        serverFilter = subscriptionId
+        reloadServerList()
+    }
+
     fun removeServer(guid: String) {
         serverList.remove(guid)
+        allServerList.remove(guid)
         MmkvManager.removeServer(guid)
     }
 
@@ -67,13 +83,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         config.fullConfig = Gson().fromJson(server, V2rayConfig::class.java)
         val key = MmkvManager.encodeServerConfig("", config)
         serverRawStorage?.encode(key, server)
+        allServerList.add(key)
         serverList.add(key)
         serversCache[key] = config
     }
 
     fun swapServer(fromPosition: Int, toPosition: Int) {
         Collections.swap(serverList, fromPosition, toPosition)
-        mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(serverList))
+        if (serverFilter == null) {
+            allServerList = serverList.toMutableList()
+        } else {
+            val filteredPositions = allServerList.indices.filter { index ->
+                val guid = allServerList[index]
+                MmkvManager.decodeServerConfig(guid)?.subscriptionId == serverFilter
+            }
+            filteredPositions.forEachIndexed { index, position ->
+                allServerList[position] = serverList[index]
+            }
+        }
+        mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(allServerList))
     }
 
     fun updateCache() {
@@ -87,7 +115,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun testAllTcping() {
+    fun testAllPing() {
         tcpingTestScope.coroutineContext[Job]?.cancelChildren()
         Utils.closeAllTcpSockets()
         MmkvManager.clearAllTestDelayResults()
@@ -97,10 +125,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         for (guid in serverList) {
             serversCache.getOrElse(guid) { MmkvManager.decodeServerConfig(guid) }?.getProxyOutbound()?.let { outbound ->
                 val serverAddress = outbound.getServerAddress()
-                val serverPort = outbound.getServerPort()
-                if (serverAddress != null && serverPort != null) {
+                if (serverAddress != null) {
                     tcpingTestScope.launch {
-                        val testResult = Utils.tcping(serverAddress, serverPort)
+                        val testResult = Utils.ping(serverAddress)
                         launch(Dispatchers.Main) {
                             MmkvManager.encodeServerTestDelayMillis(guid, testResult)
                             updateListAction.value = serverList.indexOf(guid)
@@ -109,6 +136,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
         }
+    }
+
+    fun testPing(guid: String) {
+        serversCache.getOrElse(guid) { MmkvManager.decodeServerConfig(guid) }
+                ?.getProxyOutbound()?.let { outbound ->
+                    val serverAddress = outbound.getServerAddress() ?: return
+                    tcpingTestScope.launch {
+                        val testResult = Utils.ping(serverAddress)
+                        launch(Dispatchers.Main) {
+                            MmkvManager.encodeServerTestDelayMillis(guid, testResult)
+                            updateListAction.value = serverList.indexOf(guid)
+                        }
+                    }
+                }
     }
 
     fun testCurrentServerRealPing() {
