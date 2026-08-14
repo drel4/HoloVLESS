@@ -66,7 +66,7 @@ BUILD SUCCESSFUL
 
 The final `armeabi-v7a` debug APK is
 `artifacts/holo/HoloVLESS-modern-api19-debug.apk` in the workspace and has
-SHA-256 `4ea77663c42a4aee99ce52a3788aca5cd4e72442ca6e8641d829f0e87e400406`.
+SHA-256 `70832b9005e3f36ab71a4fb0f7a8c0722091c02fcf329a986d23e9b622d9fce6`.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern
@@ -74,9 +74,11 @@ REALITY/XHTTP/PQ profile was selected, Xray and tun2socks stayed running,
 Firefox loaded `https://myip.wtf`, and the expected ISP `Senko Digital LLC`
 was shown. Tap-to-connect, tap-to-test, and hold-to-disconnect were
 each exercised on the footer, and the VLESS editor opened without a runtime
-exception. The empty subscription manager and add-profile screen were also
-opened without an Android runtime exception; no example subscription was
-required or saved. Local DNS remained off, Remote DNS remained blank, and
+exception. The subscription editor and per-app selector use dark native Holo
+form surfaces. A supplied HTTPS subscription with a UTF-8 BOM was downloaded,
+decoded, imported, and retained after an app restart on KitKat. Unsupported
+protocol lines were ignored while supported VLESS and Trojan entries were
+imported. Local DNS remained off, Remote DNS remained blank, and
 the separate stock VPN DNS field remained `1.1.1.1`.
 
 The generated proxy configuration remains excluded from logs. The provided

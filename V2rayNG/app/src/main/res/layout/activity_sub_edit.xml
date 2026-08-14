@@ -62,14 +62,12 @@
                 <EditText
                     android:id="@+id/et_url"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:background="@android:drawable/edit_text"
-                    android:gravity="top"
-                    android:inputType="textMultiLine"
-                    android:maxLines="10"
-                    android:minLines="5"
-                    android:scrollbars="vertical" />
+                    android:layout_height="@dimen/edit_height"
+                    android:inputType="textUri"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColorHint="?android:attr/textColorHint" />
 
             </LinearLayout>
 

@@ -7,11 +7,13 @@ complete license text is in `LICENSE`.
 
 ## Modification notice
 
-This fork was modified on 2026-08-09 and 2026-08-10. Material changes include
+This fork was modified on 2026-08-09, 2026-08-10, and 2026-08-14. Material
+changes include
 the Android 4.x native-Holo interface, HoloVLESS branding,
 Russian localization, the API-19 modern Xray-core binding, VLESS
 REALITY/XHTTP/PQ profile support, generated-configuration log redaction,
-subscription navigation, and reproducible native dependency packaging.
+subscription navigation and old-Android HTTPS compatibility, BOM-tolerant
+subscription parsing, and reproducible native dependency packaging.
 
 HoloVLESS is provided without warranty, as described by GPL-3.0 sections 15
 and 16. The HoloVLESS project does not provide a warranty on behalf of the

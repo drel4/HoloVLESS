@@ -27,7 +27,7 @@
         android:id="@+id/header_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#f8f8f8"
+        android:background="@android:color/transparent"
         android:orientation="vertical"
         android:paddingEnd="20dp"
         android:paddingStart="20dp">
@@ -98,7 +98,9 @@
                     android:inputType="text"
                     android:maxLines="1"
                     android:singleLine="true"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textColorHint="?android:attr/textColorHint" />
 
         </RelativeLayout>
 

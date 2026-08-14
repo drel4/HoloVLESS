@@ -130,7 +130,7 @@
     <string name="title_tab_configs">Конфигурации</string>
     <string name="title_tab_subscriptions">Подписки</string>
     <string name="sub_setting_remarks">Название</string>
-    <string name="sub_setting_url">URL (необязательно)</string>
+    <string name="sub_setting_url">URL</string>
     <string name="title_sub_update">Обновить подписку</string>
     <string name="title_ping_all_server">Проверить профили</string>
     <string name="tasker_start_service">Запуск службы</string>

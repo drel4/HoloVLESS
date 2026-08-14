@@ -14,6 +14,7 @@ import kotlin.collections.HashMap
 import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.SystemClock
 import android.util.Log
 import android.util.Patterns
@@ -26,6 +27,7 @@ import com.v2ray.ang.extension.responseLength
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.service.V2RayServiceManager
 import kotlinx.coroutines.isActive
+import libv2ray.Libv2ray
 import java.io.IOException
 import java.net.*
 import kotlin.coroutines.coroutineContext
@@ -100,13 +102,17 @@ object Utils {
      * base64 decode
      */
     fun decode(text: String): String {
-        tryDecodeBase64(text)?.let { return it }
-        if (text.endsWith('=')) {
+        val normalized = normalizeBase64Input(text)
+        tryDecodeBase64(normalized)?.let { return it }
+        if (normalized.endsWith('=')) {
             // try again for some loosely formatted base64
-            tryDecodeBase64(text.trimEnd('='))?.let { return it }
+            tryDecodeBase64(normalized.trimEnd('='))?.let { return it }
         }
         return ""
     }
+
+    internal fun normalizeBase64Input(text: String): String =
+            text.trim { it.isWhitespace() || it == '\uFEFF' }
 
     fun tryDecodeBase64(text: String): String? {
         try {
@@ -465,9 +471,13 @@ object Utils {
     @Throws(IOException::class)
     fun getUrlContentWithCustomUserAgent(urlStr: String?): String {
         val url = URL(urlStr)
+        val userAgent = "v2rayNG/${BuildConfig.VERSION_NAME}"
+        if (url.protocol.equals("https", ignoreCase = true) && Build.VERSION.SDK_INT <= 20) {
+            return Libv2ray.fetchURL(urlStr, userAgent)
+        }
         val conn = url.openConnection()
         conn.setRequestProperty("Connection", "close")
-        conn.setRequestProperty("User-agent", "v2rayNG/${BuildConfig.VERSION_NAME}")
+        conn.setRequestProperty("User-agent", userAgent)
         url.userInfo?.let {
             conn.setRequestProperty("Authorization",
                 "Basic ${encode(urlDecode(it))}")

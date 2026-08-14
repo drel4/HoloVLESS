@@ -103,9 +103,15 @@ go test -run '^$' ./...
 ```
 
 The corrected AAR SHA-256 is
-`42962d6dd19203ed86c7fcad3d15eaf5159753bd2866a8c84b769b8fe6b49e21`.
+`74ff99796796cab2ee9782f44d05440543f621fdf5fc4d419df072f711e1addd`.
 The corrected `armeabi-v7a` APK SHA-256 is
-`9d5de60fe109ca90650be8e2bc70a4de04c5d54651740e7770b74f398fbcff72`.
+`70832b9005e3f36ab71a4fb0f7a8c0722091c02fcf329a986d23e9b622d9fce6`.
+
+The binding also exposes a small HTTPS text-fetch helper backed by Go's
+`net/http` and `crypto/tls`. HoloVLESS uses it for subscription downloads on
+Android 4.4 and older, where the platform Conscrypt client cannot negotiate
+with some current TLS endpoints. Certificate verification remains enabled,
+responses are limited to 8 MiB, and non-2xx responses are rejected.
 
 ## Milestone 6b Xperia result
 

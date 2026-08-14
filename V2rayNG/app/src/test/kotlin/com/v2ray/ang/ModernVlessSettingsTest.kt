@@ -4,12 +4,19 @@ import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.v2ray.ang.dto.V2rayConfig
 import com.v2ray.ang.util.AngConfigManager
+import com.v2ray.ang.util.Utils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ModernVlessSettingsTest {
+    @Test
+    fun stripsBomAndWhitespaceBeforeSubscriptionBase64Decode() {
+        assertEquals("dmxlc3M6Ly9leGFtcGxl", Utils.normalizeBase64Input(
+                "\uFEFF  dmxlc3M6Ly9leGFtcGxl\r\n"))
+    }
+
     @Test
     fun parsesRealityQueryParametersWithoutTruncatingValues() {
         val query = AngConfigManager.parseQueryParameters(

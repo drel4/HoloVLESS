@@ -704,6 +704,8 @@ object AngConfigManager {
 
             var count = 0
             servers.lines()
+                    .map { it.trim().trimStart('\uFEFF') }
+                    .filter { it.isNotEmpty() }
                     .forEach {
                         val resId = importConfig(it, subid, removedSelectedServer)
                         if (resId == 0) {

@@ -11,7 +11,6 @@ import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import android.text.TextUtils
-import android.util.Log
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
@@ -21,7 +20,6 @@ import androidx.activity.viewModels
 import com.tbruyelle.rxpermissions.RxPermissions
 import com.tencent.mmkv.MMKV
 import com.v2ray.ang.AppConfig
-import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityMainBinding
@@ -442,7 +440,6 @@ class MainActivity : BaseActivity() {
                 if (!Utils.isValidUrl(url)) {
                     return@forEach
                 }
-                Log.d(ANG_PACKAGE, url)
                 GlobalScope.launch(Dispatchers.IO) {
                     val configText = try {
                         Utils.getUrlContentWithCustomUserAgent(url)
@@ -454,7 +451,10 @@ class MainActivity : BaseActivity() {
                         return@launch
                     }
                     launch(Dispatchers.Main) {
-                        importBatchConfig(Utils.decode(configText), it.first)
+                        // Some subscription providers prefix their Base64 response with a
+                        // UTF-8 BOM, while others return a plain list of links. The shared
+                        // importer handles both forms and normalizes Base64 before decoding.
+                        importBatchConfig(configText, it.first)
                     }
                 }
             }

@@ -73,8 +73,8 @@ class SubEditActivity : BaseActivity() {
             subItem = SubscriptionItem()
         }
 
-        subItem.remarks = binding.etRemarks.text.toString()
-        subItem.url = binding.etUrl.text.toString()
+        subItem.remarks = binding.etRemarks.text.toString().trim()
+        subItem.url = binding.etUrl.text.toString().trim()
 
         if (TextUtils.isEmpty(subItem.remarks)) {
             toast(R.string.sub_setting_remarks)

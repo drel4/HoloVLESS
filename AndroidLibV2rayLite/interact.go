@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/2dust/AndroidLibV2rayLite/CoreI"
 	"github.com/2dust/AndroidLibV2rayLite/Process/Escort"
 	"github.com/2dust/AndroidLibV2rayLite/VPN"
 	mobasset "golang.org/x/mobile/asset"
 
-	v2core "github.com/xtls/xray-core/core"
 	v2filesystem "github.com/xtls/xray-core/common/platform/filesystem"
+	v2core "github.com/xtls/xray-core/core"
 	v2stats "github.com/xtls/xray-core/features/stats"
 	v2serial "github.com/xtls/xray-core/infra/conf/serial"
 	_ "github.com/xtls/xray-core/main/distro/all"
@@ -211,6 +213,42 @@ func TestConfig(ConfigureFileContent string) error {
 	initV2Env()
 	_, err := v2serial.LoadJSONConfig(strings.NewReader(ConfigureFileContent))
 	return err
+}
+
+// FetchURL downloads a small text resource using Go's modern TLS stack.
+// Android 4.x's system HTTPS provider cannot negotiate with some current
+// subscription servers, while the bundled Go runtime already supports them.
+func FetchURL(urlStr string, userAgent string) (string, error) {
+	const maxResponseSize = 8 * 1024 * 1024
+
+	req, err := http.NewRequest(http.MethodGet, urlStr, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Close = true
+	if userAgent != "" {
+		req.Header.Set("User-Agent", userAgent)
+	}
+
+	client := &http.Client{Timeout: 20 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return "", fmt.Errorf("subscription request failed with HTTP status %d", resp.StatusCode)
+	}
+
+	limited := io.LimitReader(resp.Body, maxResponseSize+1)
+	body, err := io.ReadAll(limited)
+	if err != nil {
+		return "", err
+	}
+	if len(body) > maxResponseSize {
+		return "", fmt.Errorf("subscription response exceeds %d bytes", maxResponseSize)
+	}
+	return string(body), nil
 }
 
 /*NewV2RayPoint new V2RayPoint*/
