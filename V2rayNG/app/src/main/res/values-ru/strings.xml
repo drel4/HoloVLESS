@@ -81,7 +81,7 @@
     <string name="title_advanced">Расширенные настройки</string>
     <string name="title_vpn_settings">Настройки VPN</string>
     <string name="title_pref_per_app_proxy">Прокси для выбранных приложений</string>
-    <string name="summary_pref_per_app_proxy">Основной: выбранное приложение соединяется через прокси, не выбранное — напрямую;\nРежим обхода: выбранное приложение соединяется напрямую, не выбранное — через прокси.\nЕсть возможность автоматического выбора проксируемых приложений в меню.</string>
+    <string name="summary_pref_per_app_proxy">Android 5+. Основной режим: выбранное приложение соединяется через прокси, не выбранное — напрямую;\nрежим обхода: выбранное приложение соединяется напрямую, не выбранное — через прокси.\nАвтоматический выбор проксируемых приложений доступен в меню.</string>
     <string name="title_pref_mux_enabled">Использовать мультиплексирование (Mux)</string>
     <string name="summary_pref_mux_enabled">Быстрее, но это может привести к нестабильному соединению.\nНиже можно настроить обработку TCP, UDP и QUIC.</string>
     <string name="title_pref_speed_enabled">Показывать скорость</string>
@@ -142,8 +142,9 @@
     <string name="tasker_start_service">Запуск службы</string>
     <string name="tasker_setting_confirm">Подтвердить</string>
     <string name="routing_settings_title">Маршрутизация</string>
-    <string name="routing_settings_tips">Через запятую (,)\nЧто-то одно: домен, IP или процесс</string>
+    <string name="routing_settings_tips">Разделяйте записи запятыми (,). Сохраните изменения, затем переподключите VPN, чтобы применить их.\nЗапись может быть доменом, IP-адресом или процессом.</string>
     <string name="routing_settings_save">Сохранить</string>
+    <string name="routing_settings_saved_reconnect">Сохранено. Переподключите VPN, чтобы применить маршруты.</string>
     <string name="routing_settings_delete">Очистить</string>
     <string name="routing_settings_scan_replace">Сканировать и заменить</string>
     <string name="routing_settings_scan_append">Сканировать и добавить</string>

@@ -66,7 +66,7 @@ class RoutingSettingsFragment : Fragment() {
             val routingKey = requireArguments().getString(routing_arg).orEmpty()
             defaultSharedPreferences.edit().putString(routingKey, content).apply()
             settingsStorage?.encode(routingKey, content)
-            activity?.toast(R.string.toast_success)
+            activity?.toast(R.string.routing_settings_saved_reconnect)
             true
         }
         R.id.del_routing -> {

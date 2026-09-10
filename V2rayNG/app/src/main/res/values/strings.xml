@@ -86,7 +86,7 @@
     <string name="title_advanced">Advanced Settings</string>
     <string name="title_vpn_settings">VPN Settings</string>
     <string name="title_pref_per_app_proxy">Per-app proxy</string>
-    <string name="summary_pref_per_app_proxy">Per-app proxy mode only support Android 5.0 Lollipop or higher</string>
+    <string name="summary_pref_per_app_proxy">Choose which apps use or bypass the VPN (Android 5+)</string>
 
     <string name="title_pref_mux_enabled">Enable Mux</string>
     <string name="summary_pref_mux_enabled">Enable maybe speed up network and switch network maybe flash</string>
@@ -169,8 +169,9 @@
     <string name="tasker_setting_confirm">Confirm</string>
 
     <string name="routing_settings_title">Routing Settings</string>
-    <string name="routing_settings_tips">Separated by commas(,),remember to save</string>
+    <string name="routing_settings_tips">Separate entries with commas (,). Save, then reconnect the VPN to apply changes.</string>
     <string name="routing_settings_save">Save</string>
+    <string name="routing_settings_saved_reconnect">Saved. Reconnect the VPN to apply routing changes.</string>
     <string name="routing_settings_delete">Clear</string>
     <string name="routing_settings_scan_replace">Scan and replace</string>
     <string name="routing_settings_scan_append">Scan and append</string>
