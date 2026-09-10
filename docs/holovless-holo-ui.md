@@ -55,7 +55,7 @@ saving.
 
 The content window uses a visible inverted dark Holo gradient while the footer
 uses a flat solid surface. The ActionBar subtitle contains only the application
-version, and a complete Russian resource set covers all 157 English string and
+version, and a complete Russian resource set covers all 159 English string and
 string-array entries. A native overflow-menu entry displays the GPL source
 offer, warranty disclaimer, and third-party license summary; the complete
 notices and retained license texts ship in the matching source archive.
@@ -64,6 +64,14 @@ custom user routes are now written directly to the same MMKV settings store
 read by the VPN service and configuration generator. Per-app filtering remains
 an Android 5.0+ feature because the required platform VPN APIs are unavailable
 on Android 4.x.
+
+Version 1.0.4 adds `hysteria2://` and `hy2://` subscription/clipboard import
+using the bundled Xray core's native Hysteria2 implementation. Generated
+outbounds support authentication, TLS/SNI and ALPN, insecure mode, certificate
+pinning, Salamander obfuscation, port hopping, and optional Brutal bandwidth
+parameters. Hysteria2 profiles can be selected, connected, tested, shared, and
+removed. The legacy generic profile form cannot safely represent all Hysteria2
+fields, so editing directs the user to re-import an updated link.
 
 Source and runtime-classpath audits found no AppCompat, Material Components,
 CardView, FABProgressCircle, or Blacksquircle editor dependency. AndroidX
@@ -80,13 +88,15 @@ BUILD SUCCESSFUL
 ```
 
 The current `armeabi-v7a` debug APK is
-`artifacts/release/HoloVLESS-1.0.3-api19-armeabi-v7a-debug.apk` in the
+`artifacts/release/HoloVLESS-1.0.4-api19-armeabi-v7a-debug.apk` in the
 workspace and has SHA-256
-`53a572c8340e3589446fa0fe908581211cb6426f3228e9459038a51b1194b73e`.
+`049d8e521c3525db84ff9d5f8f73b20e8056f8efc0837c3747a602ec9d7ad938`.
 
-The settings-persistence and lazy-group-cache update was clean-built on
-2026-09-10, but has not received a new device run because live testing was not
-available. The on-device results below describe the preceding 1.0.3 build.
+The settings-persistence, lazy-group-cache, and Hysteria2 updates were
+clean-built on 2026-09-10, but have not received a new device run because live
+testing was not available. Hysteria2 link parsing and JSON generation are
+covered by unit tests, but live connectivity remains runtime-unverified. The
+on-device results below describe the preceding 1.0.3 build.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern

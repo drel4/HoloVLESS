@@ -100,6 +100,10 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
             }
 
             holder.itemMainBinding.layoutEdit.setOnClickListener {
+                if (config.configType == EConfigType.HYSTERIA2) {
+                    mActivity.toast(R.string.hysteria2_edit_import_again)
+                    return@setOnClickListener
+                }
                 val intent = Intent().putExtra("guid", guid)
                         .putExtra("isRunning", isRunning)
                 if (config.configType == EConfigType.CUSTOM) {

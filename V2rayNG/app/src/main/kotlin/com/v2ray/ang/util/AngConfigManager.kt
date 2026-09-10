@@ -39,6 +39,71 @@ object AngConfigManager {
                 }
     }
 
+    internal fun parseHysteria2Config(link: String): ServerConfig? = runCatching {
+        val uri = URI(link.trim())
+        check(uri.scheme.equals("hysteria2", true) || uri.scheme.equals("hy2", true))
+        val host = uri.host?.takeIf { it.isNotBlank() } ?: return@runCatching null
+        val port = uri.port.takeIf { it > 0 } ?: return@runCatching null
+        val password = uri.rawUserInfo?.let(Utils::urlDecode)?.takeIf { it.isNotEmpty() }
+                ?: return@runCatching null
+        val query = parseQueryParameters(uri.rawQuery)
+        val obfsType = query["obfs"].orEmpty()
+        if (obfsType.isNotEmpty() && obfsType != "salamander") {
+            return@runCatching null
+        }
+
+        val config = ServerConfig.create(EConfigType.HYSTERIA2)
+        config.remarks = uri.rawFragment?.let(Utils::urlDecode).orEmpty()
+        config.outboundBean?.settings?.apply {
+            address = host
+            this.port = port
+            version = 2
+        }
+        config.outboundBean?.streamSettings?.apply {
+            network = "hysteria"
+            security = TLS
+            hysteriaSettings = V2rayConfig.OutboundBean.StreamSettingsBean.HysteriaSettingsBean(
+                    version = 2,
+                    auth = password)
+
+            val portHopping = query["mport"]?.takeIf { it.isNotBlank() }
+            val up = normalizeHysteriaBandwidth(query["upmbps"] ?: query["up"])
+            val down = normalizeHysteriaBandwidth(query["downmbps"] ?: query["down"])
+            val quicParams = V2rayConfig.OutboundBean.StreamSettingsBean.FinalMaskBean.QuicParamsBean(
+                    congestion = if (up != null || down != null) "brutal" else null,
+                    brutalUp = up,
+                    brutalDown = down,
+                    udpHop = portHopping?.let {
+                        V2rayConfig.OutboundBean.StreamSettingsBean.FinalMaskBean.QuicParamsBean.UdpHopBean(
+                                ports = it,
+                                interval = query["hopInterval"] ?: query["hop-interval"] ?: "30")
+                    })
+            val obfsPassword = query["obfs-password"]?.takeIf { it.isNotBlank() }
+            finalmask = V2rayConfig.OutboundBean.StreamSettingsBean.FinalMaskBean(
+                    udp = obfsPassword?.let {
+                        listOf(V2rayConfig.OutboundBean.StreamSettingsBean.FinalMaskBean.MaskBean(
+                                type = "salamander",
+                                settings = V2rayConfig.OutboundBean.StreamSettingsBean.FinalMaskBean.MaskBean.MaskSettingsBean(
+                                        password = it)))
+                    },
+                    quicParams = quicParams)
+
+            val pin = query["pinSHA256"] ?: query["pcs"]
+            val insecure = (query["insecure"] == "1" || query["insecure"].equals("true", true)) && pin.isNullOrEmpty()
+            tlsSettings = V2rayConfig.OutboundBean.StreamSettingsBean.TlsSettingsBean(
+                    allowInsecure = insecure,
+                    serverName = query["sni"] ?: if (Utils.isPureIpAddress(host)) "" else host,
+                    alpn = query["alpn"]?.split(',')?.filter { it.isNotBlank() } ?: listOf("h3"),
+                    pinnedPeerCertSha256 = pin)
+        }
+        config
+    }.getOrNull()
+
+    private fun normalizeHysteriaBandwidth(value: String?): String? {
+        val bandwidth = value?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        return if (bandwidth.toIntOrNull() != null) "$bandwidth mbps" else bandwidth
+    }
+
     /**
      * Legacy loading config
      */
@@ -226,6 +291,8 @@ object AngConfigManager {
                                 if (TextUtils.isEmpty(vmessQRCode.sni)) sni else vmessQRCode.sni)
                     }
                 }
+            } else if (str.startsWith(EConfigType.HYSTERIA2.protocolScheme) || str.startsWith("hy2://")) {
+                config = parseHysteria2Config(str) ?: return R.string.toast_incorrect_protocol
             } else if (str.startsWith(EConfigType.SHADOWSOCKS.protocolScheme)) {
                 var result = str.replace(EConfigType.SHADOWSOCKS.protocolScheme, "")
                 val indexSplit = result.indexOf("#")
@@ -559,6 +626,33 @@ object AngConfigManager {
                             outbound.getServerAddress(),
                             outbound.getServerPort())
                     url + query + remark
+                }
+                EConfigType.HYSTERIA2 -> {
+                    val tls = streamSetting.tlsSettings
+                    val finalMask = streamSetting.finalmask
+                    val query = linkedMapOf<String, String>()
+                    tls?.serverName?.takeIf { it.isNotEmpty() }?.let { query["sni"] = it }
+                    if (tls?.allowInsecure == true) query["insecure"] = "1"
+                    tls?.alpn?.takeIf { it.isNotEmpty() }?.let { query["alpn"] = it.joinToString(",") }
+                    tls?.pinnedPeerCertSha256?.takeIf { it.isNotEmpty() }?.let { query["pinSHA256"] = it }
+                    finalMask?.udp?.firstOrNull()?.settings?.password?.takeIf { it.isNotEmpty() }?.let {
+                        query["obfs"] = "salamander"
+                        query["obfs-password"] = it
+                    }
+                    finalMask?.quicParams?.udpHop?.let {
+                        query["mport"] = it.ports
+                        query["hopInterval"] = it.interval
+                    }
+                    finalMask?.quicParams?.brutalUp?.let { query["up"] = it }
+                    finalMask?.quicParams?.brutalDown?.let { query["down"] = it }
+                    val encodedQuery = query.entries.joinToString("&") {
+                        "${Utils.urlEncode(it.key)}=${Utils.urlEncode(it.value)}"
+                    }.let { if (it.isEmpty()) "" else "?$it" }
+                    val address = outbound.getServerAddress().orEmpty().let {
+                        if (Utils.isIpv6Address(it)) "[$it]" else it
+                    }
+                    "${Utils.urlEncode(outbound.getPassword().orEmpty())}@$address:${outbound.getServerPort()}" +
+                            encodedQuery + "#${Utils.urlEncode(config.remarks)}"
                 }
             }
         } catch (e: Exception) {

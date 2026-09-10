@@ -8,6 +8,7 @@ import com.v2ray.ang.util.Utils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 class ModernVlessSettingsTest {
@@ -64,5 +65,44 @@ class ModernVlessSettingsTest {
         assertEquals("/", reality["spiderX"].asString)
         assertEquals("test-pq-key", reality["mldsa65Verify"].asString)
         assertTrue(reality.has("allowInsecure"))
+    }
+
+    @Test
+    fun parsesHysteria2AndHy2LinksIntoNativeXrayOutbound() {
+        val config = AngConfigManager.parseHysteria2Config(
+                "hy2://test%2Bpassword@hy2.example.test:443" +
+                        "?sni=edge.example.test&insecure=1&obfs=salamander" +
+                        "&obfs-password=mask%20secret&mport=20000-30000" +
+                        "&hopInterval=15&upmbps=25&downmbps=100#Test%20HY2")
+
+        assertNotNull(config)
+        val outbound = config!!.outboundBean!!
+        assertEquals("hysteria", outbound.protocol)
+        assertEquals("hy2.example.test", outbound.getServerAddress())
+        assertEquals(443, outbound.getServerPort())
+        assertEquals("test+password", outbound.getPassword())
+        assertEquals("Test HY2", config.remarks)
+
+        val json = JsonParser().parse(Gson().toJson(outbound)).asJsonObject
+        assertEquals(2, json["settings"].asJsonObject["version"].asInt)
+        val stream = json["streamSettings"].asJsonObject
+        assertEquals("hysteria", stream["network"].asString)
+        assertEquals("tls", stream["security"].asString)
+        assertEquals("test+password", stream["hysteriaSettings"].asJsonObject["auth"].asString)
+        assertEquals("edge.example.test", stream["tlsSettings"].asJsonObject["serverName"].asString)
+        assertTrue(stream["tlsSettings"].asJsonObject["allowInsecure"].asBoolean)
+        val finalMask = stream["finalmask"].asJsonObject
+        assertEquals("mask secret", finalMask["udp"].asJsonArray[0].asJsonObject
+                .getAsJsonObject("settings")["password"].asString)
+        assertEquals("25 mbps", finalMask["quicParams"].asJsonObject["brutalUp"].asString)
+        assertEquals("100 mbps", finalMask["quicParams"].asJsonObject["brutalDown"].asString)
+        assertEquals("20000-30000", finalMask["quicParams"].asJsonObject
+                .getAsJsonObject("udpHop")["ports"].asString)
+    }
+
+    @Test
+    fun rejectsUnsupportedHysteria2Obfuscation() {
+        assertEquals(null, AngConfigManager.parseHysteria2Config(
+                "hysteria2://password@hy2.example.test:443?obfs=unknown"))
     }
 }

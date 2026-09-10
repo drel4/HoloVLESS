@@ -76,8 +76,9 @@ data class V2rayConfig(
                                    var response: Response? = null,
                 /*DNS*/
                                    val network: String? = null,
-                                   val address: String? = null,
-                                   val port: Int? = null,
+                                   var address: String? = null,
+                                   var port: Int? = null,
+                                   var version: Int? = null,
                 /*Freedom*/
                                    var domainStrategy: String? = null,
                                    val redirect: String? = null,
@@ -128,6 +129,8 @@ data class V2rayConfig(
                                       var grpcSettings: GrpcSettingsBean? = null,
                                       var xhttpSettings: XhttpSettingsBean? = null,
                                       var realitySettings: TlsSettingsBean? = null,
+                                      var hysteriaSettings: HysteriaSettingsBean? = null,
+                                      var finalmask: FinalMaskBean? = null,
                                       val dsSettings: Any? = null,
                                       val sockopt: Any? = null
         ) {
@@ -193,7 +196,27 @@ data class V2rayConfig(
                                        var publicKey: String? = null,
                                        var shortId: String? = null,
                                        var spiderX: String? = null,
-                                       var mldsa65Verify: String? = null)
+                                       var mldsa65Verify: String? = null,
+                                       var pinnedPeerCertSha256: String? = null)
+
+            data class HysteriaSettingsBean(var version: Int = 2,
+                                             var auth: String = "")
+
+            data class FinalMaskBean(var udp: List<MaskBean>? = null,
+                                     var quicParams: QuicParamsBean? = null) {
+                data class MaskBean(var type: String,
+                                    var settings: MaskSettingsBean? = null) {
+                    data class MaskSettingsBean(var password: String? = null)
+                }
+
+                data class QuicParamsBean(var congestion: String? = null,
+                                          var brutalUp: String? = null,
+                                          var brutalDown: String? = null,
+                                          var udpHop: UdpHopBean? = null) {
+                    data class UdpHopBean(var ports: String,
+                                          var interval: String = "30")
+                }
+            }
 
             data class QuicSettingBean(var security: String = "none",
                                        var key: String = "",
@@ -312,6 +335,8 @@ data class V2rayConfig(
                     || protocol.equals(EConfigType.SOCKS.name, true)
                     || protocol.equals(EConfigType.TROJAN.name, true)) {
                 return settings?.servers?.get(0)?.address
+            } else if (protocol.equals("hysteria", true)) {
+                return settings?.address
             }
             return null
         }
@@ -324,6 +349,8 @@ data class V2rayConfig(
                     || protocol.equals(EConfigType.SOCKS.name, true)
                     || protocol.equals(EConfigType.TROJAN.name, true)) {
                 return settings?.servers?.get(0)?.port
+            } else if (protocol.equals("hysteria", true)) {
+                return settings?.port
             }
             return null
         }
@@ -337,6 +364,8 @@ data class V2rayConfig(
                 return settings?.servers?.get(0)?.password
             } else if (protocol.equals(EConfigType.SOCKS.name, true)) {
                 return settings?.servers?.get(0)?.users?.get(0)?.pass
+            } else if (protocol.equals("hysteria", true)) {
+                return streamSettings?.hysteriaSettings?.auth
             }
             return null
         }
@@ -461,7 +490,8 @@ data class V2rayConfig(
                     outbound.protocol.equals(EConfigType.VLESS.name, true) ||
                     outbound.protocol.equals(EConfigType.SHADOWSOCKS.name, true) ||
                     outbound.protocol.equals(EConfigType.SOCKS.name, true) ||
-                    outbound.protocol.equals(EConfigType.TROJAN.name, true)) {
+                    outbound.protocol.equals(EConfigType.TROJAN.name, true) ||
+                    outbound.protocol.equals("hysteria", true)) {
                 return outbound
             }
         }

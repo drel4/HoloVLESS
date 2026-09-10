@@ -58,6 +58,7 @@
     <string name="server_lab_security3">security</string>
     <string name="toast_success">Success</string>
     <string name="toast_failure">Failure</string>
+    <string name="hysteria2_edit_import_again">To change a Hysteria2 profile, import the updated link again</string>
     <string name="toast_none_data">There is nothing</string>
     <string name="toast_incorrect_protocol">Incorrect protocol</string>
     <string name="toast_decoding_failed">Decoding failed</string>

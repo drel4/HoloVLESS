@@ -28,6 +28,15 @@ data class ServerConfig(
                                     streamSettings = V2rayConfig.OutboundBean.StreamSettingsBean()))
                 EConfigType.CUSTOM ->
                     return ServerConfig(configType = configType)
+                EConfigType.HYSTERIA2 ->
+                    return ServerConfig(
+                            configType = configType,
+                            outboundBean = V2rayConfig.OutboundBean(
+                                    protocol = "hysteria",
+                                    settings = V2rayConfig.OutboundBean.OutSettingsBean(version = 2),
+                                    streamSettings = V2rayConfig.OutboundBean.StreamSettingsBean(
+                                            network = "hysteria",
+                                            security = V2rayConfig.TLS)))
                 EConfigType.SHADOWSOCKS, EConfigType.SOCKS, EConfigType.TROJAN ->
                     return ServerConfig(
                             configType = configType,
