@@ -34,9 +34,12 @@ When subscriptions exist, native Holo ActionBar tabs filter the list into
 ungrouped configurations and one tab per subscription domain. The tab strip is
 hidden when there are no subscriptions; subscription management and updating
 remain available from the overflow menu.
-Profile metadata is decoded when the stored list is reloaded and retained in
-memory; switching group tabs only filters that cache and performs no
-subscription request or repeated MMKV/JSON decode.
+The last selected group is persisted and restored at startup. Full profile
+metadata is decoded only for that group; opening another group decodes it once
+and keeps it cached for later switches. A lightweight persisted group index
+avoids loading every profile just to filter the list. Existing installations
+populate this index once after upgrading, while new imports update it
+immediately. Switching tabs never requests the subscription again.
 The overflow “Update subscription” action is hidden on the ungrouped tab and
 targets only the subscription represented by the selected group tab.
 The bottom status and action controls are one flat edge-to-edge Holo footer:
@@ -56,6 +59,11 @@ version, and a complete Russian resource set covers all 157 English string and
 string-array entries. A native overflow-menu entry displays the GPL source
 offer, warranty disclaimer, and third-party license summary; the complete
 notices and retained license texts ship in the matching source archive.
+Per-app proxy enablement, allow/bypass mode, the selected package set, and
+custom user routes are now written directly to the same MMKV settings store
+read by the VPN service and configuration generator. Per-app filtering remains
+an Android 5.0+ feature because the required platform VPN APIs are unavailable
+on Android 4.x.
 
 Source and runtime-classpath audits found no AppCompat, Material Components,
 CardView, FABProgressCircle, or Blacksquircle editor dependency. AndroidX
@@ -67,13 +75,18 @@ Result API; it does not pull AppCompat.
 The remote build passed:
 
 ```text
-./gradlew testDebugUnitTest assembleDebug --no-daemon
+./gradlew clean testDebugUnitTest assembleDebug --no-daemon
 BUILD SUCCESSFUL
 ```
 
-The final `armeabi-v7a` debug APK is
-`artifacts/holo/HoloVLESS-modern-api19-debug.apk` in the workspace and has
-SHA-256 `824970f6f2aa81cf6f83c661f82100382609240af6cca0250bd47c8f03c201ba`.
+The current `armeabi-v7a` debug APK is
+`artifacts/release/HoloVLESS-1.0.3-api19-armeabi-v7a-debug.apk` in the
+workspace and has SHA-256
+`53a572c8340e3589446fa0fe908581211cb6426f3228e9459038a51b1194b73e`.
+
+The settings-persistence and lazy-group-cache update was clean-built on
+2026-09-10, but has not received a new device run because live testing was not
+available. The on-device results below describe the preceding 1.0.3 build.
 
 On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
 launched with OEM-rendered native Holo controls. The exact supplied modern

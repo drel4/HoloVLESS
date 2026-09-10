@@ -17,6 +17,8 @@ import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import com.v2ray.ang.R
 import com.v2ray.ang.util.AppManagerUtil
+import com.v2ray.ang.util.MmkvManager
+import com.tencent.mmkv.MMKV
 import rx.android.schedulers.AndroidSchedulers
 import rx.schedulers.Schedulers
 import java.text.Collator
@@ -41,6 +43,7 @@ class PerAppProxyActivity : BaseActivity() {
     private var adapter: PerAppProxyAdapter? = null
     private var appsAll: List<AppInfo>? = null
     private val defaultSharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(this) }
+    private val settingsStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SETTING, MMKV.MULTI_PROCESS_MODE) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +56,8 @@ class PerAppProxyActivity : BaseActivity() {
         val dividerItemDecoration = DividerItemDecoration(this, LinearLayoutManager.VERTICAL)
         binding.recyclerView.addItemDecoration(dividerItemDecoration)
 
-        val blacklist = defaultSharedPreferences.getStringSet(AppConfig.PREF_PER_APP_PROXY_SET, null)
+        val blacklist = settingsStorage?.decodeStringSet(AppConfig.PREF_PER_APP_PROXY_SET)
+                ?: defaultSharedPreferences.getStringSet(AppConfig.PREF_PER_APP_PROXY_SET, null)
 
         AppManagerUtil.rxLoadNetworkAppList(this)
                 .subscribeOn(Schedulers.io())
@@ -144,13 +148,17 @@ class PerAppProxyActivity : BaseActivity() {
 
         binding.switchPerAppProxy.setOnCheckedChangeListener { _, isChecked ->
             defaultSharedPreferences.edit().putBoolean(AppConfig.PREF_PER_APP_PROXY, isChecked).apply()
+            settingsStorage?.encode(AppConfig.PREF_PER_APP_PROXY, isChecked)
         }
-        binding.switchPerAppProxy.isChecked = defaultSharedPreferences.getBoolean(AppConfig.PREF_PER_APP_PROXY, false)
+        binding.switchPerAppProxy.isChecked = settingsStorage?.decodeBool(AppConfig.PREF_PER_APP_PROXY)
+                ?: defaultSharedPreferences.getBoolean(AppConfig.PREF_PER_APP_PROXY, false)
 
         binding.switchBypassApps.setOnCheckedChangeListener { _, isChecked ->
             defaultSharedPreferences.edit().putBoolean(AppConfig.PREF_BYPASS_APPS, isChecked).apply()
+            settingsStorage?.encode(AppConfig.PREF_BYPASS_APPS, isChecked)
         }
-        binding.switchBypassApps.isChecked = defaultSharedPreferences.getBoolean(AppConfig.PREF_BYPASS_APPS, false)
+        binding.switchBypassApps.isChecked = settingsStorage?.decodeBool(AppConfig.PREF_BYPASS_APPS)
+                ?: defaultSharedPreferences.getBoolean(AppConfig.PREF_BYPASS_APPS, false)
 
         binding.etSearch.setOnEditorActionListener { v, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
@@ -185,6 +193,7 @@ class PerAppProxyActivity : BaseActivity() {
         super.onPause()
         adapter?.let {
             defaultSharedPreferences.edit().putStringSet(AppConfig.PREF_PER_APP_PROXY_SET, it.blacklist).apply()
+            settingsStorage?.encode(AppConfig.PREF_PER_APP_PROXY_SET, it.blacklist)
         }
     }
 

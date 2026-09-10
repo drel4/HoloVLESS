@@ -29,7 +29,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private var allServerList = MmkvManager.decodeServerList()
     private var serverFilter: String? = null
-    var serverList = allServerList.toMutableList()
+    private var hasAppliedServerFilter = false
+    var serverList = mutableListOf<String>()
         private set
     val serversCache = ConcurrentHashMap<String, ServerConfig>()
     val isRunning by lazy { MutableLiveData<Boolean>() }
@@ -54,14 +55,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun reloadServerList() {
         allServerList = MmkvManager.decodeServerList()
-        updateCache()
-        applyServerFilter()
+        serversCache.keys.toList().forEach { guid ->
+            if (!allServerList.contains(guid)) {
+                serversCache.remove(guid)
+            }
+        }
+        applyServerFilter(refreshVisible = true)
     }
 
     fun setServerFilter(subscriptionId: String?) {
-        if (serverFilter == subscriptionId) return
+        if (hasAppliedServerFilter && serverFilter == subscriptionId) return
         serverFilter = subscriptionId
-        applyServerFilter()
+        hasAppliedServerFilter = true
+        applyServerFilter(refreshVisible = false)
     }
 
     fun removeServer(guid: String) {
@@ -77,7 +83,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val key = MmkvManager.encodeServerConfig("", config)
         serverRawStorage?.encode(key, server)
         allServerList.add(key)
-        serverList.add(key)
+        if (serverFilter == null || serverFilter == "") {
+            serverList.add(key)
+        }
         serversCache[key] = config
     }
 
@@ -88,7 +96,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } else {
             val filteredPositions = allServerList.indices.filter { index ->
                 val guid = allServerList[index]
-                getCachedServer(guid)?.subscriptionId == serverFilter
+                MmkvManager.decodeServerSubscriptionId(guid) == serverFilter
             }
             filteredPositions.forEachIndexed { index, position ->
                 allServerList[position] = serverList[index]
@@ -97,22 +105,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(allServerList))
     }
 
-    private fun updateCache() {
-        serversCache.clear()
-        allServerList.forEach { guid ->
-            MmkvManager.decodeServerConfig(guid)?.let {
-                serversCache[guid] = it
-            }
-        }
-    }
-
-    private fun applyServerFilter() {
+    private fun applyServerFilter(refreshVisible: Boolean) {
         serverList = if (serverFilter == null) {
             allServerList.toMutableList()
         } else {
             allServerList.filter { guid ->
-                getCachedServer(guid)?.subscriptionId == serverFilter
+                MmkvManager.decodeServerSubscriptionId(guid) == serverFilter
             }.toMutableList()
+        }
+        serverList.forEach { guid ->
+            if (refreshVisible) {
+                serversCache.remove(guid)
+            }
+            getCachedServer(guid)
         }
         updateListAction.value = -1
     }

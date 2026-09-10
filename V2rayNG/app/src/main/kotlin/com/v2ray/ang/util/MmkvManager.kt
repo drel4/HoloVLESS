@@ -11,14 +11,17 @@ object MmkvManager {
     const val ID_SERVER_CONFIG = "SERVER_CONFIG"
     const val ID_SERVER_RAW = "SERVER_RAW"
     const val ID_SERVER_AFF = "SERVER_AFF"
+    const val ID_SERVER_SUBSCRIPTION = "SERVER_SUBSCRIPTION"
     const val ID_SUB = "SUB"
     const val ID_SETTING = "SETTING"
     const val KEY_SELECTED_SERVER = "SELECTED_SERVER"
+    const val KEY_SELECTED_GROUP = "SELECTED_GROUP"
     const val KEY_ANG_CONFIGS = "ANG_CONFIGS"
 
     private val mainStorage by lazy { MMKV.mmkvWithID(ID_MAIN, MMKV.MULTI_PROCESS_MODE) }
     private val serverStorage by lazy { MMKV.mmkvWithID(ID_SERVER_CONFIG, MMKV.MULTI_PROCESS_MODE) }
     private val serverAffStorage by lazy { MMKV.mmkvWithID(ID_SERVER_AFF, MMKV.MULTI_PROCESS_MODE) }
+    private val serverSubscriptionStorage by lazy { MMKV.mmkvWithID(ID_SERVER_SUBSCRIPTION, MMKV.MULTI_PROCESS_MODE) }
     private val subStorage by lazy { MMKV.mmkvWithID(ID_SUB, MMKV.MULTI_PROCESS_MODE) }
 
     fun decodeServerList(): MutableList<String> {
@@ -41,9 +44,20 @@ object MmkvManager {
         return Gson().fromJson(json, ServerConfig::class.java)
     }
 
+    fun decodeServerSubscriptionId(guid: String): String? {
+        if (guid.isBlank()) {
+            return null
+        }
+        serverSubscriptionStorage?.decodeString(guid)?.let { return it }
+        val subscriptionId = decodeServerConfig(guid)?.subscriptionId ?: return null
+        serverSubscriptionStorage?.encode(guid, subscriptionId)
+        return subscriptionId
+    }
+
     fun encodeServerConfig(guid: String, config: ServerConfig): String {
         val key = guid.ifBlank { Utils.getUuid() }
         serverStorage?.encode(key, Gson().toJson(config))
+        serverSubscriptionStorage?.encode(key, config.subscriptionId)
         val serverList= decodeServerList()
         if (!serverList.contains(key)) {
             serverList.add(key)
@@ -67,18 +81,27 @@ object MmkvManager {
         mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(serverList))
         serverStorage?.remove(guid)
         serverAffStorage?.remove(guid)
+        serverSubscriptionStorage?.remove(guid)
     }
 
     fun removeServerViaSubid(subid: String) {
         if (subid.isBlank()) {
             return
         }
-        serverStorage?.allKeys()?.forEach { key ->
-            decodeServerConfig(key)?.let { config ->
-                if (config.subscriptionId == subid) {
-                    removeServer(key)
-                }
-            }
+        val serverList = decodeServerList()
+        val removedServers = serverList.filter { decodeServerSubscriptionId(it) == subid }
+        if (removedServers.isEmpty()) {
+            return
+        }
+        if (removedServers.contains(mainStorage?.decodeString(KEY_SELECTED_SERVER))) {
+            mainStorage?.remove(KEY_SELECTED_SERVER)
+        }
+        serverList.removeAll(removedServers)
+        mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(serverList))
+        removedServers.forEach { key ->
+            serverStorage?.remove(key)
+            serverAffStorage?.remove(key)
+            serverSubscriptionStorage?.remove(key)
         }
     }
 

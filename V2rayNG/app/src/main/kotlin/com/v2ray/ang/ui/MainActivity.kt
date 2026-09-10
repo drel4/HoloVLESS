@@ -73,6 +73,7 @@ class MainActivity : BaseActivity() {
         setContentView(view)
         title = getString(R.string.app_name)
         actionBar?.subtitle = "v${BuildConfig.VERSION_NAME}"
+        selectedGroupId = mainStorage?.decodeString(MmkvManager.KEY_SELECTED_GROUP)
 
         binding.connectButton.setOnClickListener {
             if (isCheckingProfiles) return@setOnClickListener
@@ -162,6 +163,7 @@ class MainActivity : BaseActivity() {
             bar.removeAllTabs()
             if (subscriptions.isEmpty()) {
                 selectedGroupId = null
+                mainStorage?.remove(MmkvManager.KEY_SELECTED_GROUP)
                 bar.navigationMode = ActionBar.NAVIGATION_MODE_STANDARD
                 mainViewModel.setServerFilter(null)
                 return@let
@@ -171,6 +173,7 @@ class MainActivity : BaseActivity() {
             val listener = object : ActionBar.TabListener {
                 override fun onTabSelected(tab: ActionBar.Tab, transaction: FragmentTransaction?) {
                     selectedGroupId = tab.tag as String
+                    mainStorage?.encode(MmkvManager.KEY_SELECTED_GROUP, selectedGroupId)
                     mainViewModel.setServerFilter(selectedGroupId)
                     invalidateOptionsMenu()
                 }
@@ -191,6 +194,7 @@ class MainActivity : BaseActivity() {
             }
             val selectedIndex = (0 until bar.tabCount)
                     .firstOrNull { bar.getTabAt(it)?.tag == selectedGroupId } ?: 0
+            selectedGroupId = bar.getTabAt(selectedIndex)?.tag as? String
             bar.setSelectedNavigationItem(selectedIndex)
         }
     }

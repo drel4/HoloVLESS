@@ -15,6 +15,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.tbruyelle.rxpermissions.RxPermissions
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.extension.toast
+import com.v2ray.ang.util.MmkvManager
+import com.tencent.mmkv.MMKV
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -26,6 +28,7 @@ class RoutingSettingsFragment : Fragment() {
     }
 
     val defaultSharedPreferences by lazy { PreferenceManager.getDefaultSharedPreferences(context) }
+    private val settingsStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SETTING, MMKV.MULTI_PROCESS_MODE) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -44,8 +47,10 @@ class RoutingSettingsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val content = defaultSharedPreferences.getString(requireArguments().getString(routing_arg), "")
-        et_routing_content.text = Utils.getEditable(content!!)
+        val routingKey = requireArguments().getString(routing_arg).orEmpty()
+        val content = settingsStorage?.decodeString(routingKey)
+                ?: defaultSharedPreferences.getString(routingKey, "").orEmpty()
+        et_routing_content.text = Utils.getEditable(content)
 
         setHasOptionsMenu(true)
     }
@@ -58,7 +63,9 @@ class RoutingSettingsFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.save_routing -> {
             val content = et_routing_content.text.toString()
-            defaultSharedPreferences.edit().putString(requireArguments().getString(routing_arg), content).apply()
+            val routingKey = requireArguments().getString(routing_arg).orEmpty()
+            defaultSharedPreferences.edit().putString(routingKey, content).apply()
+            settingsStorage?.encode(routingKey, content)
             activity?.toast(R.string.toast_success)
             true
         }
