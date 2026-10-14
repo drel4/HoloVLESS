@@ -76,6 +76,13 @@ parameters. Hysteria2 profiles can be selected, connected, tested, shared, and
 removed. The legacy generic profile form cannot safely represent all Hysteria2
 fields, so editing directs the user to re-import an updated link.
 
+Version 1.0.5 moves subscription parsing/persistence and selected-group decoding
+to background workers. Imports stage valid profiles and publish the ID list
+once per batch, removing the per-profile full-list rewrite. Empty or unusable
+responses preserve existing profiles; BOM and whitespace are normalized
+together. Group loads are cancellable so an older result cannot overwrite a
+newer tab selection, and reordering merges with the latest stored IDs.
+
 Source and runtime-classpath audits found no AppCompat, Material Components,
 CardView, FABProgressCircle, or Blacksquircle editor dependency. AndroidX
 Fragment 1.3.6 remains because the existing routing fragments use the Activity
@@ -91,9 +98,34 @@ BUILD SUCCESSFUL
 ```
 
 The current `armeabi-v7a` debug APK is
-`artifacts/release/HoloVLESS-1.0.4-api19-armeabi-v7a-debug.apk` in the
+`artifacts/release/HoloVLESS-1.0.5-api19-armeabi-v7a-debug.apk` in the
 workspace and has SHA-256
-`2767698675cb79e23468f0e6bfd73f3cd20aa353ec7d1dbd2e6377418a1035cf`.
+`6099e711b5a57d114c5d85d570e4a810a348262b989d6298ca220f41f92fc9f4`.
+
+Version 1.0.5 was clean-built on 2026-10-14 from a Git source snapshot using
+JDK 11.0.32+9, Gradle 6.7.1, AGP 4.2.2, Android platform 30 revision 3, and
+build-tools 30.0.2. All 12 JVM tests passed, including a synthetic 5,000-profile
+batch with one save callback, preserved order/group affiliation, mixed
+VLESS/Hysteria2 input, and empty/unsupported-response preservation. The
+5,000-profile parser test took 0.48 seconds on the server; this is not a phone
+performance benchmark or native MMKV persistence measurement. No new live
+device verification was available.
+
+The server paths have moved: the current JDK is at
+`/home/nyash/0drel/v2rayNG-toolchains/jdk11` and SDK at
+`/home/nyash/android-sdk`. The clean source-snapshot build ran in
+`/home/nyash/0drel/holovless-build-1.0.5/V2rayNG` with:
+
+```sh
+env JAVA_HOME=/home/nyash/0drel/v2rayNG-toolchains/jdk11 \
+    ANDROID_SDK_ROOT=/home/nyash/android-sdk \
+    ANDROID_HOME=/home/nyash/android-sdk \
+    bash ./gradlew -Dorg.gradle.jvmargs=-Xmx2048m clean testDebugUnitTest assembleDebug --no-daemon
+```
+
+Public releases are hosted at https://github.com/drel4/HoloVLESS/releases;
+GitHub's automatic tag archives provide the matching source without a
+separately uploaded source ZIP.
 
 The settings-persistence, lazy-group-cache, Hysteria2, and latest settings-UI
 updates were clean-built on 2026-09-10, but have not received a new device run

@@ -1,6 +1,7 @@
 # HoloVLESS
 
-A native-Holo VLESS client for Android 4.x, based on v2rayNG and powered by
+A native-Holo VLESS client for Android 4.x, based on
+[v2rayNG](https://github.com/2dust/v2rayNG) and powered by
 modern [Xray-core](https://github.com/XTLS/Xray-core).
 
 > HoloVLESS is developed with AI assistance. If you prefer software developed
