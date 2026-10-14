@@ -239,9 +239,9 @@ object AngConfigManager {
     /**
      * import config form qrcode or...
      */
-    private fun importConfig(str: String?, subid: String, removedSelectedServer: ServerConfig?): Int {
+    private fun importConfig(str: String?, subid: String, onImported: (ServerConfig) -> Unit): Int {
         try {
-            if (str == null || TextUtils.isEmpty(str)) {
+            if (str.isNullOrEmpty()) {
                 return R.string.toast_none_data
             }
 
@@ -398,12 +398,7 @@ object AngConfigManager {
                 return R.string.toast_incorrect_protocol
             }
             config.subscriptionId = subid
-            val guid = MmkvManager.encodeServerConfig("", config)
-            if (removedSelectedServer != null &&
-                    config.getProxyOutbound()?.getServerAddress() == removedSelectedServer.getProxyOutbound()?.getServerAddress() &&
-                    config.getProxyOutbound()?.getServerPort() == removedSelectedServer.getProxyOutbound()?.getServerPort()) {
-                mainStorage?.encode(KEY_SELECTED_SERVER, guid)
-            }
+            onImported(config)
         } catch (e: Exception) {
             e.printStackTrace()
             return -1
@@ -773,39 +768,31 @@ object AngConfigManager {
         }
     }
 
-    fun importBatchConfig(servers: String?, subid: String): Int {
+    fun importBatchConfig(servers: String?, subid: String): Int =
+            importBatchConfig(servers, subid, MmkvManager::importServerConfigs)
+
+    internal fun importBatchConfig(servers: String?, subid: String,
+                                   saveBatch: (List<ServerConfig>, String) -> Unit): Int {
         try {
             if (servers == null) {
                 return 0
             }
-            val removedSelectedServer =
-                    if (!TextUtils.isEmpty(subid)) {
-                        MmkvManager.decodeServerConfig(mainStorage?.decodeString(KEY_SELECTED_SERVER) ?: "")?.let {
-                            if (it.subscriptionId == subid) {
-                                return@let it
-                            }
-                            return@let null
-                        }
-                    } else {
-                        null
-                    }
-            MmkvManager.removeServerViaSubid(subid)
-
-//            var servers = server
-//            if (server.indexOf("vmess") >= 0 && server.indexOf("vmess") == server.lastIndexOf("vmess")) {
-//                servers = server.replace("\n", "")
-//            }
-
+            // Parse before replacing anything: an empty/invalid response must not
+            // erase the existing subscription (including the Base64 fallback).
+            val configs = mutableListOf<ServerConfig>()
             var count = 0
-            servers.lines()
+            servers.lineSequence()
                     .map { it.trim().trimStart('\uFEFF') }
                     .filter { it.isNotEmpty() }
                     .forEach {
-                        val resId = importConfig(it, subid, removedSelectedServer)
+                        val resId = importConfig(it, subid) { config -> configs.add(config) }
                         if (resId == 0) {
                             count++
                         }
                     }
+            if (configs.isNotEmpty()) {
+                saveBatch(configs, subid)
+            }
             return count
         } catch (e: Exception) {
             e.printStackTrace()

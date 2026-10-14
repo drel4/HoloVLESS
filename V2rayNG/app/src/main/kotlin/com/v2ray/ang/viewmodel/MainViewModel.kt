@@ -3,6 +3,7 @@ package com.v2ray.ang.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -18,8 +19,9 @@ import com.v2ray.ang.dto.ServerConfig
 import com.v2ray.ang.dto.V2rayConfig
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.util.*
-import com.v2ray.ang.util.MmkvManager.KEY_ANG_CONFIGS
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -27,7 +29,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val mainStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_MAIN, MMKV.MULTI_PROCESS_MODE) }
     private val serverRawStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SERVER_RAW, MMKV.MULTI_PROCESS_MODE) }
 
-    private var allServerList = MmkvManager.decodeServerList()
+    private var allServerList = mutableListOf<String>()
+    private var loadListJob: Job? = null
     private var serverFilter: String? = null
     private var hasAppliedServerFilter = false
     var serverList = mutableListOf<String>()
@@ -36,6 +39,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val isRunning by lazy { MutableLiveData<Boolean>() }
     val updateListAction by lazy { MutableLiveData<Int>() }
     val updateTestResultAction by lazy { MutableLiveData<String>() }
+    val importResultAction by lazy { MutableLiveData<Int>() }
+    private val importMutex = Mutex()
 
     private val tcpingTestScope by lazy { CoroutineScope(Dispatchers.IO) }
 
@@ -54,13 +59,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun reloadServerList() {
-        allServerList = MmkvManager.decodeServerList()
-        serversCache.keys.toList().forEach { guid ->
-            if (!allServerList.contains(guid)) {
-                serversCache.remove(guid)
-            }
-        }
         applyServerFilter(refreshVisible = true)
+    }
+
+    fun importBatchConfig(server: String?, subid: String) {
+        viewModelScope.launch {
+            val count = withContext(Dispatchers.IO) {
+                importMutex.withLock {
+                    var imported = AngConfigManager.importBatchConfig(server, subid)
+                    if (imported <= 0 && !server.isNullOrBlank()) {
+                        imported = AngConfigManager.importBatchConfig(Utils.decode(server), subid)
+                    }
+                    imported
+                }
+            }
+            if (count > 0) reloadServerList()
+            importResultAction.value = count
+        }
     }
 
     fun setServerFilter(subscriptionId: String?) {
@@ -71,12 +86,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun removeServer(guid: String) {
+        loadListJob?.cancel()
+        serversCache.remove(guid)
         serverList.remove(guid)
         allServerList.remove(guid)
         MmkvManager.removeServer(guid)
     }
 
     fun appendCustomConfigServer(server: String) {
+        loadListJob?.cancel()
         val config = ServerConfig.create(EConfigType.CUSTOM)
         config.remarks = System.currentTimeMillis().toString()
         config.fullConfig = Gson().fromJson(server, V2rayConfig::class.java)
@@ -90,41 +108,43 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun swapServer(fromPosition: Int, toPosition: Int) {
+        loadListJob?.cancel()
         Collections.swap(serverList, fromPosition, toPosition)
-        if (serverFilter == null) {
-            allServerList = serverList.toMutableList()
-        } else {
-            val filteredPositions = allServerList.indices.filter { index ->
-                val guid = allServerList[index]
-                MmkvManager.decodeServerSubscriptionId(guid) == serverFilter
-            }
-            filteredPositions.forEachIndexed { index, position ->
-                allServerList[position] = serverList[index]
-            }
-        }
-        mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(allServerList))
+        // Merge this visible group's order into the latest stored list. An import
+        // completing during a drag must not lose its newly added profiles.
+        MmkvManager.reorderServers(serverList)
     }
 
     private fun applyServerFilter(refreshVisible: Boolean) {
-        serverList = if (serverFilter == null) {
-            allServerList.toMutableList()
-        } else {
-            allServerList.filter { guid ->
-                MmkvManager.decodeServerSubscriptionId(guid) == serverFilter
-            }.toMutableList()
-        }
-        serverList.forEach { guid ->
-            if (refreshVisible) {
-                serversCache.remove(guid)
+        loadListJob?.cancel()
+        val filter = serverFilter
+        loadListJob = viewModelScope.launch {
+            val (all, visible, loaded) = withContext(Dispatchers.IO) {
+                val all = MmkvManager.decodeServerList()
+                val visible = mutableListOf<String>()
+                val loaded = mutableMapOf<String, ServerConfig>()
+                all.forEach { guid ->
+                    ensureActive()
+                    if (filter == null || MmkvManager.decodeServerSubscriptionId(guid) == filter) {
+                        val config = (if (refreshVisible) null else serversCache[guid])
+                                ?: MmkvManager.decodeServerConfig(guid)
+                        if (config != null) {
+                            visible.add(guid)
+                            loaded[guid] = config
+                        }
+                    }
+                }
+                Triple(all, visible, loaded)
             }
-            getCachedServer(guid)
+            // Publish only after decoding finishes. Cancellation prevents an older
+            // group load from replacing a newer selection during fast tab switches.
+            allServerList = all
+            val existing = all.toHashSet()
+            serversCache.keys.toList().forEach { if (it !in existing) serversCache.remove(it) }
+            serversCache.putAll(loaded)
+            serverList = visible
+            updateListAction.value = -1
         }
-        updateListAction.value = -1
-    }
-
-    private fun getCachedServer(guid: String): ServerConfig? {
-        serversCache[guid]?.let { return it }
-        return MmkvManager.decodeServerConfig(guid)?.also { serversCache[guid] = it }
     }
 
     fun testAllPing() {

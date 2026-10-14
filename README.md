@@ -3,6 +3,16 @@
 A native-Holo VLESS client for Android 4.x, based on v2rayNG and powered by
 modern [Xray-core](https://github.com/XTLS/Xray-core).
 
+> HoloVLESS is developed with AI assistance. If you prefer software developed
+> without AI, this project may not be for you.
+
+Download APKs from [GitHub Releases](https://github.com/drel4/HoloVLESS/releases).
+Each release also provides GitHub-generated source ZIP and tar.gz archives.
+
+Version 1.0.5 moves subscription parsing, saving, and group loading off the UI
+thread. Large imports save the profile-ID list once per batch instead of once
+per profile, and unusable subscription responses retain existing profiles.
+
 ## HoloVLESS modern build
 
 The active HoloVLESS build combines the API-19 modern-core experiment with a

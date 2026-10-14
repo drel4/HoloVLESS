@@ -115,6 +115,12 @@ class MainActivity : BaseActivity() {
     }
 
     private fun setupViewModelObserver() {
+        mainViewModel.importResultAction.observe(this) { count ->
+            if (count == null) return@observe
+            mainViewModel.importResultAction.value = null
+            toast(if (count > 0) R.string.toast_success else R.string.toast_failure)
+            if (count > 0) setupMainTabs()
+        }
         mainViewModel.updateListAction.observe(this) {
             val index = it ?: return@observe
             if (index >= 0) {
@@ -493,16 +499,8 @@ class MainActivity : BaseActivity() {
     }
 
     fun importBatchConfig(server: String?, subid: String = "") {
-        var count = AngConfigManager.importBatchConfig(server, subid)
-        if (count <= 0) {
-            count = AngConfigManager.importBatchConfig(Utils.decode(server!!), subid)
-        }
-        if (count > 0) {
-            toast(R.string.toast_success)
-            mainViewModel.reloadServerList()
-        } else {
-            toast(R.string.toast_failure)
-        }
+        toast(R.string.msg_dialog_progress)
+        mainViewModel.importBatchConfig(server, subid)
     }
 
     fun importConfigCustomClipboard()
@@ -588,24 +586,19 @@ class MainActivity : BaseActivity() {
             toast(R.string.title_sub_update)
             val url = subscription.second.url
             if (!Utils.isValidUrl(url)) return false
-            GlobalScope.launch(Dispatchers.IO) {
+            lifecycleScope.launch {
                 val configText = try {
-                    Utils.getUrlContentWithCustomUserAgent(url)
+                    withContext(Dispatchers.IO) { Utils.getUrlContentWithCustomUserAgent(url) }
                 } catch (e: Exception) {
-                    e.printStackTrace()
-                    launch(Dispatchers.Main) {
-                        val groupName = Utils.subscriptionGroupName(url)
-                                .ifEmpty { subscription.second.remarks }
-                        toast("\"$groupName\" " + getString(R.string.toast_failure))
-                    }
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    val groupName = Utils.subscriptionGroupName(url)
+                            .ifEmpty { subscription.second.remarks }
+                    toast("\"$groupName\" " + getString(R.string.toast_failure))
                     return@launch
                 }
-                launch(Dispatchers.Main) {
-                    // Some subscription providers prefix their Base64 response with a
-                    // UTF-8 BOM, while others return a plain list of links. The shared
-                    // importer handles both forms and normalizes Base64 before decoding.
-                    importBatchConfig(configText, subscription.first)
-                }
+                // The ViewModel parses and saves both plain and Base64 responses
+                // on IO, and retains the import across activity recreation.
+                importBatchConfig(configText, subscription.first)
             }
         } catch (e: Exception) {
             e.printStackTrace()

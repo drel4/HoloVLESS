@@ -54,6 +54,7 @@ object MmkvManager {
         return subscriptionId
     }
 
+    @Synchronized
     fun encodeServerConfig(guid: String, config: ServerConfig): String {
         val key = guid.ifBlank { Utils.getUuid() }
         serverStorage?.encode(key, Gson().toJson(config))
@@ -69,6 +70,63 @@ object MmkvManager {
         return key
     }
 
+    /** Saves a parsed import with one ID-list read/write, rather than one per profile. */
+    fun importServerConfigs(configs: List<ServerConfig>, subid: String) {
+        if (configs.isEmpty()) return
+        val gson = Gson()
+        // Stage expensive serialization outside the list-mutation lock so UI
+        // actions do not wait for every profile in a large import.
+        val imported = configs.map { config ->
+            val key = Utils.getUuid()
+            serverStorage?.encode(key, gson.toJson(config))
+            serverSubscriptionStorage?.encode(key, config.subscriptionId)
+            key to config
+        }
+        val removed = synchronized(this) {
+            val serverList = decodeServerList()
+            val removed = if (subid.isBlank()) emptySet() else serverList
+                    .filter { decodeServerSubscriptionId(it) == subid }.toHashSet()
+            val selected = mainStorage?.decodeString(KEY_SELECTED_SERVER).orEmpty()
+            val selectedConfig = if (selected in removed) decodeServerConfig(selected) else null
+            // Read the latest list at commit time so concurrent additions survive.
+            serverList.removeAll(removed)
+            serverList.addAll(imported.map { it.first })
+            mainStorage?.encode(KEY_ANG_CONFIGS, gson.toJson(serverList))
+            if (selected.isBlank() || selected in removed) {
+                val replacement = selectedConfig?.let { previous ->
+                    imported.firstOrNull { (_, config) ->
+                        config.getProxyOutbound()?.getServerAddress() == previous.getProxyOutbound()?.getServerAddress() &&
+                                config.getProxyOutbound()?.getServerPort() == previous.getProxyOutbound()?.getServerPort()
+                    }?.first
+                }
+                // Respect a selection changed by the UI while publishing.
+                if (mainStorage?.decodeString(KEY_SELECTED_SERVER).orEmpty() == selected) {
+                    mainStorage?.encode(KEY_SELECTED_SERVER, replacement ?: imported.first().first)
+                }
+            }
+            removed
+        }
+        removed.forEach { key ->
+            serverStorage?.remove(key)
+            serverAffStorage?.remove(key)
+            serverSubscriptionStorage?.remove(key)
+        }
+    }
+
+    @Synchronized
+    fun reorderServers(orderedGuids: List<String>) {
+        val current = decodeServerList()
+        val existing = current.toHashSet()
+        val ordered = orderedGuids.filter { it in existing }
+        val reordered = ordered.toHashSet()
+        var index = 0
+        current.indices.forEach { position ->
+            if (current[position] in reordered) current[position] = ordered[index++]
+        }
+        mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(current))
+    }
+
+    @Synchronized
     fun removeServer(guid: String) {
         if (guid.isBlank()) {
             return
@@ -84,6 +142,7 @@ object MmkvManager {
         serverSubscriptionStorage?.remove(guid)
     }
 
+    @Synchronized
     fun removeServerViaSubid(subid: String) {
         if (subid.isBlank()) {
             return
