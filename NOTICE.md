@@ -7,14 +7,17 @@ complete license text is in `LICENSE`.
 
 ## Modification notice
 
-This fork was modified on 2026-08-09, 2026-08-10, and 2026-08-14. Material
+This fork was modified on 2026-08-09, 2026-08-10, 2026-08-14, 2026-09-10,
+and 2026-10-14. Material
 changes include
 the Android 4.x native-Holo interface, HoloVLESS branding,
 Russian localization, the API-19 modern Xray-core binding, VLESS
 REALITY/XHTTP/PQ profile support, generated-configuration log redaction,
 subscription navigation and old-Android HTTPS compatibility, BOM-tolerant
 subscription parsing, domain-based subscription groups, endpoint and routed
-connectivity diagnostics, and reproducible native dependency packaging.
+connectivity diagnostics, reproducible native dependency packaging, Hysteria2
+profile support, VPN settings persistence, and background/batched subscription
+imports and group loading.
 
 HoloVLESS is provided without warranty, as described by GPL-3.0 sections 15
 and 16. The HoloVLESS project does not provide a warranty on behalf of the
@@ -26,6 +29,10 @@ Every distributed APK must have an equivalently accessible HoloVLESS source
 archive next to it at no additional charge. The source archive must identify
 the same release or commit as the APK and must retain `LICENSE`, this notice,
 `THIRD_PARTY_NOTICES.md`, `third_party_licenses/`, and the build documentation.
+
+GitHub Releases provides automatic ZIP and tar.gz source archives for each
+release tag at https://github.com/drel4/HoloVLESS/releases. The release APK and
+these source archives refer to the same tagged source tree.
 
 The preferred source for the application and its Go wrapper is contained in
 this repository. `AndroidLibV2rayLite/go.mod` and `go.sum` pin the complete Go

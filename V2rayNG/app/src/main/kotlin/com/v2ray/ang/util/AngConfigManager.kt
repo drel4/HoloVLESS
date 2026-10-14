@@ -782,7 +782,7 @@ object AngConfigManager {
             val configs = mutableListOf<ServerConfig>()
             var count = 0
             servers.lineSequence()
-                    .map { it.trim().trimStart('\uFEFF') }
+                    .map { line -> line.trim { it.isWhitespace() || it == '\uFEFF' } }
                     .filter { it.isNotEmpty() }
                     .forEach {
                         val resId = importConfig(it, subid) { config -> configs.add(config) }
