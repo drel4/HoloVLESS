@@ -27,12 +27,6 @@ and other Holo widgets with the standard Holo-blue accent. It does not include
 AppCompat, Material Components, CardView, or a Material toolbar. This interim
 release uses the original GPL-3.0 v2rayNG launcher icon.
 
-The modern-core/Holo build was installed and tested on a Sony Xperia ZR C5503
-running Android 4.4.2. The supplied REALITY/XHTTP profile connected, Firefox
-loaded `https://myip.wtf`, and the expected VPN ISP was reported. The legacy
-baseline was also manually verified by the user on a Samsung Galaxy S5; the
-combined modern-core/Holo build has not yet received a separate Samsung test.
-
 See `docs/milestone6-modern-xray-api19.md` for the modern-core work and
 `docs/holovless-holo-ui.md` for the Holo redesign and verification record.
 
@@ -66,7 +60,7 @@ runtime experiment after the API 17 baseline has passed.
 This fork retains the upstream GNU General Public License version 3; see
 `LICENSE`. It is not relicensed.
 
-### API 17 baseline build and device status
+### Baseline build toolchain
 
 The command-line baseline build runs on Debian 13 with the following pinned
 toolchain:
@@ -101,51 +95,34 @@ cross-checked against Huawei's mirror and matched exactly:
 - RxPermissions 0.9.4 SHA-256:
   `074d485acf74d6a484471b5630d4b5d4551fb784d982e223078b7f2400c9e871`
 
-The resulting `armeabi-v7a` debug APK has SHA-256
-`9151530000f1ecc00c5e53470d8cd8c5a9f75ed063112d0b2c8eedeb49514031`,
-declares minSdk 17/targetSdk 30, and installs and launches on a Sony Xperia ZR
-C5503 running Android 4.4.2 (API 19). The bundled MMKV and Go JNI libraries
-load there.
-
-End-to-end VLESS verification passed on the Xperia using the replacement
-legacy-compatible VLESS-over-TCP profile. The app's local-DNS option and an
-explicit remote DoH value were used while diagnosing an initial DNS timeout, but
-a subsequent retest worked without either setting, so they are not required for
-the verified connection. Firefox then loaded `https://myip.wtf`, which reported
-the expected ISP, Senko Digital LLC. The same build and profile were also
-manually verified by the user on a Samsung Galaxy S5. The initial profile remains
-unsupported because Xray-core 1.5.2 does not recognize its newer `xhttp`
-transport and REALITY/PQ parameters; the inherited core was not upgraded for the
-baseline.
-
-[![API](https://img.shields.io/badge/API-17%2B-yellow.svg?style=flat)](https://developer.android.com/about/versions/jelly-bean#android-4.2)
+[![API](https://img.shields.io/badge/API-19%2B-yellow.svg?style=flat)](https://developer.android.com/about/versions/kitkat)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-1.5.10-blue.svg)](https://kotlinlang.org)
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/2dust/v2rayNG)](https://github.com/2dust/v2rayNG/commits/master)
-[![CodeFactor](https://www.codefactor.io/repository/github/2dust/v2rayng/badge)](https://www.codefactor.io/repository/github/2dust/v2rayng)
-[![GitHub Releases](https://img.shields.io/github/downloads/2dust/v2rayNG/latest/total?logo=github)](https://github.com/2dust/v2rayNG/releases)
-[![Chat on Telegram](https://img.shields.io/badge/Chat%20on-Telegram-brightgreen.svg)](https://t.me/v2rayn)
-
-<a href="https://play.google.com/store/apps/details?id=com.v2ray.ang">
-<img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" width="165" height="64" />
-</a>
 
 ### Usage
 
 #### Geoip and Geosite
-v2rayNG release already embedded domain file `geoip.dat` and `geosite.dat`. However it is (probably) not the latest and not the most complete list.
+HoloVLESS uses `geoip.dat` and `geosite.dat` for geographic routing. These files
+may not contain the latest or most complete lists.
 For power user, the embedded files can be easily replaced with the following steps:
-1. Launch v2rayNG (v1.4.9+)
+1. Launch HoloVLESS.
 2. Find existing geoip.dat and geosite.dat in `Android/data/com.v2ray.ang/files/assets` (path may differ on some Android device)
 3. Replace them with the latest [domain list](https://github.com/v2fly/domain-list-community) and [ip list](https://github.com/v2fly/geoip)
 4. Enhanced version can be found in this [repo](https://github.com/Loyalsoldier/v2ray-rules-dat) (recommend to use `geosite:geolocation-!cn` for proxy dns and routing)
 5. It is also possible to use third party dat file in the same folder, like [h2y](https://guide.v2fly.org/routing/sitedata.html#%E5%A4%96%E7%BD%AE%E7%9A%84%E5%9F%9F%E5%90%8D%E6%96%87%E4%BB%B6)
 
-#### See more in our [wiki](https://github.com/2dust/v2rayNG/wiki)
+The [upstream v2rayNG wiki](https://github.com/2dust/v2rayNG/wiki) provides
+additional protocol and routing reference information.
 
 ### Development guide
 
-Android project under V2rayNG folder can be compiled directly in Android Studio, or using Gradle wrapper. But the v2ray core inside the aar is (probably) outdated.  
-The aar can be compiled from the Golang project under AndroidLibV2rayLite folder. For a quick start, read guide for [Go Mobile](https://github.com/golang/go/wiki/Mobile)
-and [Makefiles for Go Developers](https://tutorialedge.net/golang/makefiles-for-go-developers/)
+Build HoloVLESS from the `V2rayNG` directory using the Gradle wrapper, JDK 11,
+Android SDK platform 30, and build-tools 30.0.2:
 
-v2rayNG can run on Android Emulators, with minimum Android 5.0
+```sh
+cd V2rayNG
+bash ./gradlew clean testDebugUnitTest assembleDebug --no-daemon
+```
+
+Set `JAVA_HOME` and `ANDROID_SDK_ROOT` to your installed toolchains. The bundled
+modern core is built from `AndroidLibV2rayLite`; exact versions and API-19
+binding instructions are in `docs/milestone6-modern-xray-api19.md`.

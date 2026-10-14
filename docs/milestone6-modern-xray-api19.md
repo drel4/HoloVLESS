@@ -1,8 +1,7 @@
 # Milestone 6: modern Xray-core API 19 experiment
 
-Status: Milestone 6b passed its real-device end-to-end gate on the Xperia ZR.
-The result remains isolated on the modern-core experiment branch; the Phase 2
-baseline remains the supported build until the Holo redesign is stable.
+Status: the modern core and REALITY/XHTTP parser integration are included in
+the active HoloVLESS build. Its effective native API floor is 19.
 
 ## Inputs and isolated branch
 
@@ -51,32 +50,23 @@ override for this API-19-only device test.
 The resulting `armeabi-v7a` debug APK has SHA-256
 `3e33a0eff87460f56860edc5502a353b65b65a2b7a957dd3fc574a4060256ef2`.
 
-## Xperia result
+## Legacy parser limitation
 
-The APK installed and launched on the Sony Xperia ZR C5503 running Android
-4.4.2/API 19. Dalvik loaded the new `libgojni.so`, demonstrating that the
-modern Go runtime reached application startup on this ARM32/API 19 device.
-
-The original modern profile was explicitly selected, replacing the previously
-selected legacy TCP test profile. Starting the VPN reached current Xray's JSON
-loader, which recognized the `xhttp` network and `reality` security values but
-stopped with this error:
+The inherited parser recognized neither REALITY-specific fields nor modern
+XHTTP transport settings. The new core requires populated REALITY settings;
+without the parser changes, the generated configuration produces:
 
 ```text
 infra/conf: REALITY: Empty "realitySettings".
 ```
 
-Therefore the legacy app's imported profile does not generate the Reality
-settings required by the current core. The connection never reached the
-`myip.wtf` verification step. Per the milestone instruction, no further attempt
-was made to extend or force the legacy profile generator; the experiment was
-stopped and the working Phase 2 baseline was restored.
+Milestone 6b addresses this application-side configuration gap.
 
 ## Milestone 6b: modern profile support
 
 Milestone 6b authorized extending the old app model, link parser, and generated
 Xray JSON. The experiment now preserves the modern VLESS query values needed by
-the supplied profile:
+modern profiles:
 
 - REALITY: `fp`, `pbk`, `sid`, `spx`, and `pqv`
 - XHTTP: `path`, `host`, and `mode`
@@ -84,12 +74,10 @@ the supplied profile:
 The generated stream settings select `security: reality`, emit a populated
 `realitySettings`, and emit `xhttpSettings`. Query parsing also preserves
 base64-style values containing `=`. Synthetic unit tests cover query decoding
-and the REALITY/XHTTP JSON round trip; no supplied credential is embedded in
-the tests or repository.
+and the REALITY/XHTTP JSON round trip; tests use synthetic profile values.
 
-The first end-to-end attempt exposed a separate wrapper defect: the protected
-dialer always created an IPv6 socket even when the cached server address was
-IPv4. Current Go/Xray made that mismatch visible on KitKat as
+The protected dialer previously created an IPv6 socket even when the cached
+server address was IPv4. This address-family mismatch can cause
 `network is unreachable`. The wrapper now selects `AF_INET` or `AF_INET6` from
 the resolved address and creates the matching sockaddr. Focused IPv4/IPv6 tests
 cover the conversion.
@@ -115,20 +103,6 @@ responses are limited to 8 MiB, and non-2xx responses are rejected.
 The same binding can time an HTTPS request to `myip.wtf` through the app's
 local SOCKS listener. It has an outer 20-second deadline so an unresponsive
 profile cannot stall a batch check indefinitely.
-
-## Milestone 6b Xperia result
-
-After a clean device restart, the exact supplied REALITY/XHTTP/PQ profile
-started Xray 26.3.27, launched tun2socks, and passed TCP and UDP traffic through
-the protected server connection. `https://myip.wtf` loaded and reported the VPN
-exit at `2.27.28.55`, hostname `furankfurt.furry.ru.net`, and ISP
-`Senko Digital LLC`.
-
-Local DNS remained disabled and Remote DNS remained blank. The separate
-`VPN DNS (only IPv4/v6)` field was explicitly restored to the base app's
-shipped `1.1.1.1` default. This was necessary because storing an empty Remote
-DNS preference masks the Kotlin fallback and otherwise makes KitKat send DNS
-queries to the private Wi-Fi router through the remote VPN exit.
 
 ## Reproducible tun2socks source
 

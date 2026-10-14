@@ -1,7 +1,6 @@
 # HoloVLESS Holo UI milestone
 
-Status: the Holo redesign and modern-core combination passed its Xperia ZR
-on-device gate on 2026-08-09.
+Status: native-Holo UI and the API-19 modern-core integration are implemented.
 
 ## Foundation
 
@@ -127,34 +126,8 @@ Public releases are hosted at https://github.com/drel4/HoloVLESS/releases;
 GitHub's automatic tag archives provide the matching source without a
 separately uploaded source ZIP.
 
-The settings-persistence, lazy-group-cache, Hysteria2, and latest settings-UI
-updates were clean-built on 2026-09-10, but have not received a new device run
-because live testing was not available. Hysteria2 link parsing and JSON
-generation are covered by unit tests, but live connectivity remains
-runtime-unverified. The on-device results below describe the preceding 1.0.3
-build.
-
-On the Sony Xperia ZR C5503 (Android 4.4.2/API 19), the APK installed and
-launched with OEM-rendered native Holo controls. The exact supplied modern
-REALITY/XHTTP/PQ profile was selected, Xray and tun2socks stayed running,
-Firefox loaded `https://myip.wtf`, and the expected ISP `Senko Digital LLC`
-was shown. Tap-to-connect, tap-to-test, and hold-to-disconnect were
-each exercised on the footer, and the VLESS editor opened without a runtime
-exception. The subscription editor and per-app selector use dark native Holo
-form surfaces. A supplied HTTPS subscription with a UTF-8 BOM was downloaded,
-decoded, imported, and retained after an app restart on KitKat. Unsupported
-protocol lines were ignored while supported VLESS and Trojan entries were
-imported. The supplied subscription produced a domain-named group tab, while
-the configurations tab retained only the two ungrouped profiles. The overflow
-menu exposes separate endpoint ping and routed internet-check actions, and a
-long press exposes the same actions for one profile. Internet checks request
-`myip.wtf` through each profile and enforce a hard timeout before restoring the
-previous selection and VPN state. Local DNS remained off, Remote DNS remained blank, and
-the separate stock VPN DNS field remained `1.1.1.1`.
-
-The generated proxy configuration remains excluded from logs. The provided
-profile is not committed to the repository or reproduced in this document.
-
-Screenshots are retained under the workspace's `artifacts/holo` directory,
-including the main list, platform settings, import menu, connected state,
-browser ISP result, compact rows, Russian UI, and Holo gradient.
+The overflow menu exposes separate endpoint-ping and routed internet-check
+actions, and a long press exposes the same actions for one profile. Internet
+checks request `myip.wtf` through the chosen profile and enforce a hard timeout
+before restoring the previous selection and VPN state. Generated proxy
+configurations remain excluded from logs.
