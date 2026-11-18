@@ -23,13 +23,13 @@ object V2rayConfigUtil {
         try {
             val config = MmkvManager.decodeServerConfig(guid) ?: return Result(false, "")
             if (config.configType == EConfigType.CUSTOM) {
-                val raw = serverRawStorage?.decodeString(guid)
+                val raw = config.rawConfig ?: serverRawStorage?.decodeString(guid)
                 val customConfig = if (raw.isNullOrBlank()) {
                     config.fullConfig?.toPrettyPrinting() ?: return Result(false, "")
                 } else {
                     raw
                 }
-                return Result(true, customConfig)
+                return Result(true, JsonProfiles.forConnection(customConfig))
             }
             val outbound = config.getProxyOutbound() ?: return Result(false, "")
             val result = getV2rayNonCustomConfig(context, outbound)

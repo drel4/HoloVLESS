@@ -8,7 +8,7 @@ complete license text is in `LICENSE`.
 ## Modification notice
 
 This fork was modified on 2026-08-09, 2026-08-10, 2026-08-14, 2026-09-10,
-and 2026-10-14. Material
+2026-10-14, and 2026-11-18. Material
 changes include
 the Android 4.x native-Holo interface, HoloVLESS branding,
 Russian localization, the API-19 modern Xray-core binding, VLESS
@@ -17,7 +17,8 @@ subscription navigation and old-Android HTTPS compatibility, BOM-tolerant
 subscription parsing, domain-based subscription groups, endpoint and routed
 connectivity diagnostics, reproducible native dependency packaging, Hysteria2
 profile support, VPN settings persistence, and background/batched subscription
-imports and group loading.
+imports and group loading, lossless full-JSON profiles, JSON/Hysteria2 editing,
+profile sorting, independent core delay tests, and selected-profile deletion.
 
 HoloVLESS is provided without warranty, as described by GPL-3.0 sections 15
 and 16. The HoloVLESS project does not provide a warranty on behalf of the
@@ -38,7 +39,7 @@ The preferred source for the application and its Go wrapper is contained in
 this repository. `AndroidLibV2rayLite/go.mod` and `go.sum` pin the complete Go
 module graph used by the modern `libv2ray.aar`; running `go mod download`
 retrieves those exact module versions. The exact Android/ARM binding command
-and toolchain versions are recorded in `docs/milestone6-modern-xray-api19.md`.
+and toolchain versions for 1.1 are recorded in `docs/releases/1.1.md`.
 
 The tun2socks source inputs are included directly under
 `AndroidLibV2rayLite/third_party_sources/`. `compile-tun2socks.sh` verifies

@@ -16,6 +16,12 @@ import com.v2ray.ang.dto.V2rayConfig
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.util.MmkvManager
 import com.v2ray.ang.util.Utils
+import com.v2ray.ang.util.AngConfigManager
+import com.v2ray.ang.util.JsonProfiles
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.drakeet.support.toast.ToastCompat
 
 class ServerCustomConfigActivity : BaseActivity() {
@@ -24,6 +30,7 @@ class ServerCustomConfigActivity : BaseActivity() {
     private val mainStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_MAIN, MMKV.MULTI_PROCESS_MODE) }
     private val serverRawStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SERVER_RAW, MMKV.MULTI_PROCESS_MODE) }
     private val editGuid by lazy { intent.getStringExtra("guid").orEmpty() }
+    private var saving = false
     private val isRunning by lazy {
         intent.getBooleanExtra("isRunning", false)
                 && editGuid.isNotEmpty()
@@ -51,7 +58,13 @@ class ServerCustomConfigActivity : BaseActivity() {
      */
     private fun bindingServer(config: ServerConfig): Boolean {
         binding.etRemarks.text = Utils.getEditable(config.remarks)
-        val raw = serverRawStorage?.decodeString(editGuid)
+        if (config.configType == EConfigType.HYSTERIA2) {
+            binding.tvEditorHelp.setText(R.string.hysteria2_editor_help)
+            binding.editor.text = Utils.getEditable(AngConfigManager.shareConfig(editGuid))
+            return true
+        }
+        binding.tvEditorHelp.setText(R.string.json_editor_help)
+        val raw = config.rawConfig ?: serverRawStorage?.decodeString(editGuid)
         if (raw.isNullOrBlank()) {
             binding.editor.text = Utils.getEditable(config.fullConfig?.toPrettyPrinting().orEmpty())
         } else {
@@ -77,22 +90,30 @@ class ServerCustomConfigActivity : BaseActivity() {
             return false
         }
 
-        val v2rayConfig = try {
-            Gson().fromJson(binding.editor.text.toString(), V2rayConfig::class.java)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            ToastCompat.makeText(this, "${getString(R.string.toast_malformed_josn)} ${e.cause?.message}", Toast.LENGTH_LONG).show()
-            return false
+        if (saving || isRunning) return false
+        val content = binding.editor.text.toString()
+        val remarks = binding.etRemarks.text.toString().trim()
+        saving = true
+        lifecycleScope.launch {
+            val success = withContext(Dispatchers.IO) {
+                runCatching {
+                    val old = MmkvManager.decodeServerConfig(editGuid)
+                    val parsed = if (old?.configType == EConfigType.HYSTERIA2) {
+                        AngConfigManager.parseHysteria2Config(content) ?: error("Invalid Hysteria2 link")
+                    } else {
+                        JsonProfiles.parse(content).single()
+                    }
+                    val config = parsed.copy(remarks = remarks,
+                            subscriptionId = old?.subscriptionId.orEmpty(),
+                            addedTime = old?.addedTime ?: parsed.addedTime)
+                    MmkvManager.encodeServerConfig(editGuid, config)
+                    serverRawStorage?.remove(editGuid)
+                }.isSuccess
+            }
+            saving = false
+            toast(if (success) R.string.toast_success else R.string.toast_config_file_invalid)
+            if (success) finish()
         }
-
-        val config = MmkvManager.decodeServerConfig(editGuid) ?: ServerConfig.create(EConfigType.CUSTOM)
-        config.remarks = binding.etRemarks.text.toString().trim()
-        config.fullConfig = v2rayConfig
-
-        MmkvManager.encodeServerConfig(editGuid, config)
-        serverRawStorage?.encode(editGuid, binding.editor.text.toString())
-        toast(R.string.toast_success)
-        finish()
         return true
     }
 

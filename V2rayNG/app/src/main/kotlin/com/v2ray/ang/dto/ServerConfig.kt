@@ -12,7 +12,8 @@ data class ServerConfig(
         val addedTime: Long = System.currentTimeMillis(),
         var remarks: String = "",
         val outboundBean: V2rayConfig.OutboundBean? = null,
-        var fullConfig: V2rayConfig? = null
+        var fullConfig: V2rayConfig? = null,
+        var rawConfig: String? = null
 ) {
     companion object {
         fun create(configType: EConfigType): ServerConfig {
@@ -53,12 +54,18 @@ data class ServerConfig(
         if (configType != EConfigType.CUSTOM) {
             return outboundBean
         }
-        return fullConfig?.getProxyOutbound()
+        return outboundBean ?: fullConfig?.getProxyOutbound()
     }
 
     fun getAllOutboundTags(): MutableList<String> {
         if (configType != EConfigType.CUSTOM) {
             return mutableListOf(TAG_AGENT, TAG_DIRECT, TAG_BLOCKED)
+        }
+        rawConfig?.let { raw ->
+            return runCatching {
+                com.google.gson.JsonParser.parseString(raw).asJsonObject.getAsJsonArray("outbounds")
+                        .mapNotNull { it.asJsonObject.get("tag")?.asString }.toMutableList()
+            }.getOrDefault(mutableListOf())
         }
         fullConfig?.let { config ->
             return config.outbounds.map { it.tag }.toMutableList()
@@ -69,6 +76,7 @@ data class ServerConfig(
     fun getV2rayPointDomainAndPort(): String {
         val address = getProxyOutbound()?.getServerAddress().orEmpty()
         val port = getProxyOutbound()?.getServerPort()
+        if (address.isBlank() || port == null) return ""
         return if (Utils.isIpv6Address(address)) {
             String.format("[%s]:%s", address, port)
         } else {

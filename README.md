@@ -10,17 +10,20 @@ modern [Xray-core](https://github.com/XTLS/Xray-core).
 Download APKs from [GitHub Releases](https://github.com/drel4/HoloVLESS/releases).
 Each release also provides GitHub-generated source ZIP and tar.gz archives.
 
-Version 1.0.5 moves subscription parsing, saving, and group loading off the UI
-thread. Large imports save the profile-ID list once per batch instead of once
-per profile, and unusable subscription responses retain existing profiles.
+Version 1.1 adds full Xray JSON imports and editing, Hysteria2 link editing,
+profile sorting, independent core-based connection checks, and a fix for
+deleting the selected/top profile. Large subscription imports remain batched
+and run off the UI thread.
 
 ## HoloVLESS modern build
 
 The active HoloVLESS build combines the API-19 modern-core experiment with a
-platform `Theme.Holo` interface. It uses Xray-core v26.3.27 and supports the
-tested VLESS REALITY, XHTTP, and post-quantum profile fields. The application
+platform `Theme.Holo` interface. Version 1.1 uses Xray-core v26.11.9, with
+VLESS REALITY, XHTTP, post-quantum fields, and Hysteria2 support. The application
 manifest remains at minSdk 17, while the modern Go AAR declares minSdk 19;
-therefore this modern-core build is supported on Android 4.4/API 19 and newer.
+therefore Android 4.4/API 19 is the intended floor. The updated 1.1 core still
+needs runtime verification on old Android; a successful build is not a device
+compatibility guarantee. See `docs/releases/1.1.md` for its verification status.
 
 The UI uses the Android platform ActionBar, dialogs, preferences, switches,
 and other Holo widgets with the standard Holo-blue accent. It does not include
@@ -125,4 +128,5 @@ bash ./gradlew clean testDebugUnitTest assembleDebug --no-daemon
 
 Set `JAVA_HOME` and `ANDROID_SDK_ROOT` to your installed toolchains. The bundled
 modern core is built from `AndroidLibV2rayLite`; exact versions and API-19
-binding instructions are in `docs/milestone6-modern-xray-api19.md`.
+binding instructions for 1.1 are in `docs/releases/1.1.md`; the original
+experiment is recorded in `docs/milestone6-modern-xray-api19.md`.

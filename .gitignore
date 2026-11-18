@@ -7,3 +7,5 @@ V2rayNG/app/src/main/java/com/v2ray/ang/InappBuyActivity.java
 V2rayNG/app/release/output.json
 .idea/
 .gradle/
+!V2rayNG/app/src/main/assets/geoip.dat
+!V2rayNG/app/src/main/assets/geosite.dat

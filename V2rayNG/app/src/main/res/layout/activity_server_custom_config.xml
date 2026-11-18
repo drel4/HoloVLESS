@@ -17,9 +17,10 @@
             android:layout_margin="@dimen/layout_margin_spacing">
 
             <TextView
+                android:id="@+id/tv_editor_help"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/server_lab_need_inbound"
+                android:text="@string/json_editor_help"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="@color/colorPrimary" />
         </LinearLayout>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sort_profiles">Сортировка</string>
+    <string name="cancel_checks">Отменить проверку</string>
+    <string name="checks_progress">Проверено %1$d из %2$d · отмена в меню</string>
+    <string name="json_editor_help">Редактируйте полную конфигурацию Xray JSON. Локальные входы SOCKS/HTTP настраиваются автоматически при подключении.</string>
+    <string name="hysteria2_editor_help">Измените ссылку hysteria2:// или hy2:// ниже и сохраните. Название выше заменяет название из ссылки.</string>
+    <string-array name="profile_sort_modes">
+        <item>По названию</item>
+        <item>По задержке (рабочие первыми)</item>
+        <item>По протоколу</item>
+        <item>Сначала новые</item>
+    </string-array>
+</resources>

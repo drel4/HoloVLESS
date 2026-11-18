@@ -19,6 +19,7 @@ import com.v2ray.ang.dto.ServerConfig
 import com.v2ray.ang.dto.V2rayConfig
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.util.*
+import com.v2ray.ang.service.CoreTestService
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -40,6 +41,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val updateListAction by lazy { MutableLiveData<Int>() }
     val updateTestResultAction by lazy { MutableLiveData<String>() }
     val importResultAction by lazy { MutableLiveData<Int>() }
+    val isTesting by lazy { MutableLiveData<Boolean>(false) }
     private val importMutex = Mutex()
 
     private val tcpingTestScope by lazy { CoroutineScope(Dispatchers.IO) }
@@ -113,6 +115,34 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // Merge this visible group's order into the latest stored list. An import
         // completing during a drag must not lose its newly added profiles.
         MmkvManager.reorderServers(serverList)
+    }
+
+    fun sortProfiles(mode: Int) {
+        val guids = serverList.toList()
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                val entries = guids.mapNotNull { guid ->
+                    MmkvManager.decodeServerConfig(guid)?.let { config ->
+                        ProfileSorting.Entry(guid, config.remarks, config.configType.name,
+                                MmkvManager.decodeServerAffiliationInfo(guid)?.testDelayMillis ?: 0L, config.addedTime)
+                    }
+                }
+                MmkvManager.reorderServers(ProfileSorting.sort(entries, mode))
+            }
+            reloadServerList()
+        }
+    }
+
+    fun checkProfiles(guids: List<String>) {
+        if (guids.isEmpty()) return
+        CoreTestService.start(getApplication(), guids)
+        isTesting.value = true
+    }
+
+    fun cancelChecks() {
+        val context = getApplication<AngApplication>()
+        context.startService(Intent(context, CoreTestService::class.java).setAction(CoreTestService.CANCEL))
+        isTesting.value = false
     }
 
     private fun applyServerFilter(refreshVisible: Boolean) {
@@ -197,6 +227,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val mMsgReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
             when (intent?.getIntExtra("key", 0)) {
+                CoreTestService.RESULT -> {
+                    val guid = intent.getStringExtra("guid").orEmpty()
+                    val index = serverList.indexOf(guid)
+                    if (index >= 0) updateListAction.value = index
+                    val done = intent.getBooleanExtra("done", false)
+                    isTesting.value = !done
+                    updateTestResultAction.value = if (done) {
+                        getApplication<AngApplication>().getString(R.string.profiles_checked_result,
+                                intent.getIntExtra("working", 0), intent.getIntExtra("total", 0))
+                    } else {
+                        getApplication<AngApplication>().getString(R.string.checks_progress,
+                                intent.getIntExtra("completed", 0), intent.getIntExtra("total", 0))
+                    }
+                }
                 AppConfig.MSG_STATE_RUNNING -> {
                     isRunning.value = true
                 }

@@ -100,32 +100,24 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
             }
 
             holder.itemMainBinding.layoutEdit.setOnClickListener {
-                if (config.configType == EConfigType.HYSTERIA2) {
-                    mActivity.toast(R.string.hysteria2_edit_import_again)
-                    return@setOnClickListener
-                }
                 val intent = Intent().putExtra("guid", guid)
                         .putExtra("isRunning", isRunning)
-                if (config.configType == EConfigType.CUSTOM) {
+                if (config.configType == EConfigType.CUSTOM || config.configType == EConfigType.HYSTERIA2) {
                     mActivity.startActivity(intent.setClass(mActivity, ServerCustomConfigActivity::class.java))
                 } else {
                     mActivity.startActivity(intent.setClass(mActivity, ServerActivity::class.java))
                 }
             }
             holder.itemMainBinding.layoutRemove.setOnClickListener {
-                if (guid != mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER)) {
-                    mActivity.mainViewModel.removeServer(guid)
-                    notifyItemRemoved(position)
-                    notifyItemRangeChanged(position, mActivity.mainViewModel.serverList.size)
-                }
+                removeProfile(guid)
             }
 
             holder.itemMainBinding.infoContainer.setOnClickListener {
                 val selected = mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER)
                 if (guid != selected) {
                     mainStorage?.encode(MmkvManager.KEY_SELECTED_SERVER, guid)
-                    notifyItemChanged(mActivity.mainViewModel.serverList.indexOf(selected))
-                    notifyItemChanged(mActivity.mainViewModel.serverList.indexOf(guid))
+                    mActivity.mainViewModel.serverList.indexOf(selected).takeIf { it >= 0 }?.let { notifyItemChanged(it) }
+                    mActivity.mainViewModel.serverList.indexOf(guid).takeIf { it >= 0 }?.let { notifyItemChanged(it) }
                     if (isRunning) {
                         mActivity.showCircle()
                         Utils.stopVService(mActivity)
@@ -176,15 +168,23 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 
     override fun onItemDismiss(position: Int) {
         val guid = mActivity.mainViewModel.serverList.getOrNull(position) ?: return
-        if (guid != mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER)) {
-//            mActivity.alert(R.string.del_config_comfirm) {
-//                positiveButton(android.R.string.ok) {
+        removeProfile(guid)
+    }
+
+    private fun removeProfile(guid: String) {
+        val selected = guid == mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER)
+        val remove = {
+            if (selected && isRunning) Utils.stopVService(mActivity)
             mActivity.mainViewModel.removeServer(guid)
-            notifyItemRemoved(position)
-//                }
-//                show()
-//            }
+            // Resolve by identity, not the position captured when the row was bound.
+            notifyDataSetChanged()
         }
+        if (selected) {
+            AlertDialog.Builder(mActivity).setMessage(R.string.del_config_comfirm)
+                    .setPositiveButton(android.R.string.ok) { _, _ -> remove() }
+                    .setNegativeButton(android.R.string.cancel) { _, _ -> notifyDataSetChanged() }
+                    .setOnCancelListener { notifyDataSetChanged() }.show()
+        } else remove()
     }
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {

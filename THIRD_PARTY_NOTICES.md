@@ -13,17 +13,28 @@ notice inventory, not a replacement for the complete license texts stored in
 
 - AndroidLibV2rayLite wrapper, modified by HoloVLESS, GPL-3.0 as part of this
   work.
-- XTLS/Xray-core `v1.260327.0` (Xray v26.3.27), MPL-2.0.
+- XTLS/Xray-core `v1.260327.1-0.20261109052709-676eaf66f8f0`
+  (Xray v26.11.9, commit `676eaf66f8f05d4d558ee7a74b4736623d3feeb9`), MPL-2.0.
 - XTLS/reality, MPL-2.0 and BSD-3-Clause portions.
-- SagerNet/sing `v0.5.1` and sing-shadowsocks `v0.2.7`, GPL-3.0-or-later.
 - Other statically linked Go modules are listed with their exact versions in
-  `third_party_licenses/go/GO-MODULES.txt`. License, notice, and patent files
+  `third_party_licenses/licenses-go-1.1/GO-MODULES.txt`. License, notice, and patent files
   copied from every module used by the Android/ARM build are retained beside
   that list.
 
-The Xray and SagerNet copyleft components are distributed as part of the
+The Xray copyleft components are distributed as part of the
 GPL-3.0 HoloVLESS work without restricting access to their source. Their exact
 source versions are retrievable through the checked-in `go.mod` and `go.sum`.
+
+## Routing datasets
+
+The unmodified `geoip.dat` and `geosite.dat` assets are from
+Loyalsoldier/v2ray-rules-dat release `202611172204`:
+https://github.com/Loyalsoldier/v2ray-rules-dat/releases/tag/202611172204
+The upstream GPL-3.0 license and README with source-data credits are retained
+in `third_party_licenses/geo/`. This includes attribution to MaxMind GeoLite2,
+v2fly/domain-list-community, and the additional lists identified upstream.
+The corresponding generation source and hashes are recorded in
+`docs/releases/1.1.md`. The older Go inventory is retained for historical builds.
 
 ## Native tun2socks
 
@@ -72,7 +83,8 @@ GPL-3.0 source. No separately licensed HoloVLESS artwork is included.
 ## License locations
 
 - HoloVLESS/v2rayNG GPL-3.0: `LICENSE`
-- Go module licenses: `third_party_licenses/go/`
+- Current Go module licenses: `third_party_licenses/licenses-go-1.1/`
+- Routing dataset license and credits: `third_party_licenses/geo/`
 - MPL-2.0 convenience copy: `third_party_licenses/MPL-2.0.txt`
 - Apache-2.0 convenience copy: `third_party_licenses/Apache-2.0.txt`
 - Native BSD notices: `third_party_licenses/native/`

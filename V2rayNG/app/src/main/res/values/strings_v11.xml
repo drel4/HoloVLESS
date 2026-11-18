@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sort_profiles">Sort</string>
+    <string name="cancel_checks">Cancel checks</string>
+    <string name="checks_progress">Checked %1$d of %2$d · cancel in menu</string>
+    <string name="json_editor_help">Edit the full Xray JSON configuration. Local SOCKS/HTTP listeners are adjusted automatically when connecting.</string>
+    <string name="hysteria2_editor_help">Edit the hysteria2:// or hy2:// link below, then save. The name above overrides the link label.</string>
+    <string-array name="profile_sort_modes">
+        <item>Name</item>
+        <item>Latency (working first)</item>
+        <item>Protocol</item>
+        <item>Newest first</item>
+    </string-array>
+</resources>

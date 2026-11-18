@@ -75,22 +75,24 @@ func (v *V2RayPoint) RunLoop() (err error) {
 
 	if !v.status.IsRunning {
 		v.closeChan = make(chan struct{})
-		v.dialer.PrepareResolveChan()
-		go v.dialer.PrepareDomain(v.DomainName, v.closeChan)
-		go func() {
-			select {
-			// wait until resolved
-			case <-v.dialer.ResolveChan():
-				// shutdown VPNService if server name can not reolved
-				if !v.dialer.IsVServerReady() {
-					log.Println("vServer cannot resolved, shutdown")
-					v.StopLoop()
-				}
+		if v.DomainName != "" {
+			v.dialer.PrepareResolveChan()
+			go v.dialer.PrepareDomain(v.DomainName, v.closeChan)
+			go func() {
+				select {
+				// wait until resolved
+				case <-v.dialer.ResolveChan():
+					// shutdown VPNService if server name can not reolved
+					if !v.dialer.IsVServerReady() {
+						log.Println("vServer cannot resolved, shutdown")
+						v.StopLoop()
+					}
 
-			// stop waiting if manually closed
-			case <-v.closeChan:
-			}
-		}()
+				// stop waiting if manually closed
+				case <-v.closeChan:
+				}
+			}()
+		}
 
 		err = v.pointloop()
 	}
@@ -157,7 +159,7 @@ func (v *V2RayPoint) pointloop() error {
 		return err
 	}
 	v.status.Vpoint = inst
-	v.statsManager = inst.GetFeature(v2stats.ManagerType()).(v2stats.Manager)
+	v.statsManager, _ = inst.GetFeature(v2stats.ManagerType()).(v2stats.Manager)
 
 	log.Println("start v2ray core")
 	v.status.IsRunning = true

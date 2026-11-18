@@ -51,18 +51,11 @@ class MainActivity : BaseActivity() {
     private val settingsStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SETTING, MMKV.MULTI_PROCESS_MODE) }
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         if (it.resultCode == RESULT_OK) {
-            pendingInternetChecks?.let { guids ->
-                pendingInternetChecks = null
-                runInternetChecks(guids)
-            } ?: startV2Ray()
-        } else {
-            pendingInternetChecks = null
+            startV2Ray()
         }
     }
     private var mItemTouchHelper: ItemTouchHelper? = null
     private var selectedGroupId: String? = null
-    private var pendingInternetChecks: List<String>? = null
-    private var internetCheckJob: Job? = null
     private var isCheckingProfiles = false
     val mainViewModel: MainViewModel by viewModels()
 
@@ -130,9 +123,11 @@ class MainActivity : BaseActivity() {
             }
         }
         mainViewModel.updateTestResultAction.observe(this) {
-            if (mainViewModel.isRunning.value == true) {
-                binding.connectButton.text = it
-            }
+            binding.connectButton.text = it
+        }
+        mainViewModel.isTesting.observe(this) {
+            isCheckingProfiles = it == true
+            invalidateOptionsMenu()
         }
         mainViewModel.isRunning.observe(this) {
             val isRunning = it ?: return@observe
@@ -232,10 +227,20 @@ class MainActivity : BaseActivity() {
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         menu?.findItem(R.id.sub_update)?.isVisible = !selectedGroupId.isNullOrEmpty()
+        menu?.findItem(R.id.cancel_checks)?.isVisible = isCheckingProfiles
         return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.sort_profiles -> {
+            AlertDialog.Builder(this).setTitle(R.string.sort_profiles)
+                    .setItems(R.array.profile_sort_modes) { _, mode -> mainViewModel.sortProfiles(mode) }.show()
+            true
+        }
+        R.id.cancel_checks -> {
+            mainViewModel.cancelChecks()
+            true
+        }
         R.id.import_qrcode -> {
             importQRcode(true)
             true
@@ -361,89 +366,7 @@ class MainActivity : BaseActivity() {
             toast(R.string.toast_none_data)
             return
         }
-        if (internetCheckJob?.isActive == true) {
-            toast(R.string.connection_test_testing)
-            return
-        }
-        val vpnMode = (settingsStorage?.decodeString(AppConfig.PREF_MODE) ?: "VPN") == "VPN"
-        val permissionIntent = if (vpnMode) VpnService.prepare(this) else null
-        if (permissionIntent != null) {
-            pendingInternetChecks = guids
-            requestVpnPermission.launch(permissionIntent)
-        } else {
-            runInternetChecks(guids)
-        }
-    }
-
-    private fun runInternetChecks(guids: List<String>) {
-        internetCheckJob = lifecycleScope.launch {
-            val previousSelected = mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER).orEmpty()
-            val wasRunning = mainViewModel.isRunning.value == true
-            var successful = 0
-            isCheckingProfiles = true
-            try {
-                guids.forEachIndexed { index, guid ->
-                    binding.connectButton.text = getString(
-                            R.string.checking_profiles_progress, index + 1, guids.size)
-                    // Stop unconditionally: a profile may start its service process but
-                    // fail before the running-state broadcast reaches the activity.
-                    Utils.stopVService(this@MainActivity)
-                    waitForServiceState(false)
-                    mainStorage?.encode(MmkvManager.KEY_SELECTED_SERVER, guid)
-                    mainViewModel.updateListAction.value = -1
-                    V2RayServiceManager.startV2Ray(this@MainActivity)
-                    val started = waitForServiceState(true)
-                    val result = if (started) {
-                        delay(750)
-                        withContext(Dispatchers.IO) {
-                            try {
-                                Libv2ray.measureURLThroughSocks(
-                                        "https://myip.wtf", "127.0.0.1:10808")
-                            } catch (_: Exception) {
-                                -1L
-                            }
-                        }
-                    } else {
-                        -1L
-                    }
-                    if (result >= 0L) successful++
-                    MmkvManager.encodeServerTestDelayMillis(guid, result)
-                    mainViewModel.updateListAction.value = mainViewModel.serverList.indexOf(guid)
-                }
-            } finally {
-                withContext(NonCancellable) {
-                    Utils.stopVService(this@MainActivity)
-                    waitForServiceState(false)
-                    if (previousSelected.isNotEmpty()) {
-                        mainStorage?.encode(MmkvManager.KEY_SELECTED_SERVER, previousSelected)
-                    }
-                    if (wasRunning && previousSelected.isNotEmpty()) {
-                        V2RayServiceManager.startV2Ray(this@MainActivity)
-                        waitForServiceState(true)
-                    }
-                    mainViewModel.updateListAction.value = -1
-                    isCheckingProfiles = false
-                    internetCheckJob = null
-                    if (!isFinishing) {
-                        binding.connectButton.setText(if (mainViewModel.isRunning.value == true) {
-                            R.string.connection_connected_hold
-                        } else {
-                            R.string.action_connect
-                        })
-                        toast(getString(R.string.profiles_checked_result, successful, guids.size))
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun waitForServiceState(running: Boolean, timeoutMillis: Long = 15000L): Boolean {
-        val attempts = (timeoutMillis / 200L).toInt()
-        repeat(attempts) {
-            if ((mainViewModel.isRunning.value == true) == running) return true
-            delay(200L)
-        }
-        return (mainViewModel.isRunning.value == true) == running
+        mainViewModel.checkProfiles(guids)
     }
 
 
@@ -653,19 +576,7 @@ class MainActivity : BaseActivity() {
      * import customize config
      */
     fun importCustomizeConfig(server: String?) {
-        try {
-            if (server == null || TextUtils.isEmpty(server)) {
-                toast(R.string.toast_none_data)
-                return
-            }
-            mainViewModel.appendCustomConfigServer(server)
-            toast(R.string.toast_success)
-            adapter.notifyItemInserted(mainViewModel.serverList.lastIndex)
-        } catch (e: Exception) {
-            ToastCompat.makeText(this, "${getString(R.string.toast_malformed_josn)} ${e.cause?.message}", Toast.LENGTH_LONG).show()
-            e.printStackTrace()
-            return
-        }
+        importBatchConfig(server)
     }
 
 //    val mConnection = object : ServiceConnection {

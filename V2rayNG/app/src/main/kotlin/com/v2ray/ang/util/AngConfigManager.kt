@@ -468,7 +468,7 @@ object AngConfigManager {
     /**
      * share config
      */
-    private fun shareConfig(guid: String): String {
+    fun shareConfig(guid: String): String {
         try {
             val config = MmkvManager.decodeServerConfig(guid) ?: return ""
             val outbound = config.getProxyOutbound() ?: return ""
@@ -776,6 +776,12 @@ object AngConfigManager {
         try {
             if (servers == null) {
                 return 0
+            }
+            val normalized = servers.trim { it.isWhitespace() || it == '\uFEFF' }
+            if (normalized.startsWith("{") || normalized.startsWith("[")) {
+                val configs = JsonProfiles.parse(normalized, subid)
+                saveBatch(configs, subid)
+                return configs.size
             }
             // Parse before replacing anything: an empty/invalid response must not
             // erase the existing subscription (including the Base64 fallback).

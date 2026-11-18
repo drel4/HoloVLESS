@@ -7,8 +7,8 @@ import (
 	"log"
 	"net"
 	"os"
-	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	v2net "github.com/xtls/xray-core/common/net"
@@ -91,14 +91,11 @@ type ProtectedDialer struct {
 	protectSet
 }
 
-// DestIpAddress implements Xray's current SystemDialer interface. The wrapper
-// already resolves and caches the proxy server before the core starts, so expose
-// that address to transports which need it.
+// DestIpAddress leaves transport address resolution profile-specific.
 func (d *ProtectedDialer) DestIpAddress() net.IP {
-	if d.vServer == nil {
-		return nil
-	}
-	return d.vServer.currentIP()
+	// One process may test several unrelated outbounds. Do not substitute the
+	// active VPN server's cached IP into another profile's transport.
+	return nil
 }
 
 func (d *ProtectedDialer) IsVServerReady() bool {
@@ -215,54 +212,32 @@ func (d *ProtectedDialer) Init(_ dns.Client, _ outbound.Manager) {
 func (d *ProtectedDialer) Dial(ctx context.Context,
 	src v2net.Address, dest v2net.Destination, sockopt *v2internet.SocketConfig) (net.Conn, error) {
 
-	network := dest.Network.SystemString()
-	Address := dest.NetAddr()
-
-	// v2ray server address,
-	// try to connect fixed IP if multiple IP parsed from domain,
-	// and switch to next IP if error occurred
-	if strings.Compare(Address, d.currentServer) == 0 {
-		if d.vServer == nil {
-			log.Println("Dial pending prepare  ...", Address)
-			<-d.resolveChan
-
-			// user may close connection during PrepareDomain,
-			// fast return release resources.
-			if d.vServer == nil {
-				return nil, fmt.Errorf("fail to prepare domain %s", d.currentServer)
+	address := dest.NetAddr()
+	if address == d.currentServer && d.resolveChan != nil {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-d.resolveChan:
+		}
+		if d.vServer != nil {
+			address = net.JoinHostPort(d.vServer.currentIP().String(), fmt.Sprint(d.vServer.Port))
+		}
+	}
+	dialer := net.Dialer{Timeout: 10 * time.Second, Resolver: d.resolver,
+		Control: func(_, _ string, socket syscall.RawConn) error {
+			var protectErr error
+			err := socket.Control(func(fd uintptr) {
+				if d.Protect(int(fd)) != 0 {
+					protectErr = errors.New("VPN socket protection failed")
+				}
+			})
+			if err != nil {
+				return err
 			}
-		}
-
-		curIP := d.vServer.currentIP()
-		fd, err := d.getFd(dest.Network, curIP)
-		if err != nil {
-			return nil, err
-		}
-
-		conn, err := d.fdConn(ctx, curIP, d.vServer.Port, fd)
-		if err != nil {
-			d.vServer.NextIP()
-			return nil, err
-		}
-		log.Printf("Using Prepared: %s", curIP)
-		return conn, nil
+			return protectErr
+		},
 	}
-
-	// v2ray connecting to "domestic" servers, no caching results
-	log.Printf("Not Using Prepared: %s,%s", network, Address)
-	resolved, err := d.lookupAddr(Address)
-	if err != nil {
-		return nil, err
-	}
-
-	fd, err := d.getFd(dest.Network, resolved.IPs[0])
-	if err != nil {
-		return nil, err
-	}
-
-	// use the first resolved address.
-	// the result IP may vary, eg: IPv6 addrs comes first if client has ipv6 address
-	return d.fdConn(ctx, resolved.IPs[0], resolved.Port, fd)
+	return dialer.DialContext(ctx, dest.Network.SystemString(), address)
 }
 
 func (d *ProtectedDialer) fdConn(ctx context.Context, ip net.IP, port int, fd int) (net.Conn, error) {
