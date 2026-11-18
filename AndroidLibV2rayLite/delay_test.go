@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -48,6 +49,39 @@ func TestDelayUsesCoreWithoutBindingProfileListeners(t *testing.T) {
 	defer tester.Cancel()
 	if delay, err := tester.Measure(config, server.URL); err != nil || delay < 0 {
 		t.Fatalf("independent test failed: %v", err)
+	}
+}
+
+func TestDelayConcurrentBatch32(t *testing.T) {
+	var arrivals int32
+	ready := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if atomic.AddInt32(&arrivals, 1) == 32 {
+			close(ready)
+		}
+		select {
+		case <-ready:
+			w.WriteHeader(http.StatusNoContent)
+		case <-r.Context().Done():
+		}
+	}))
+	defer server.Close()
+	tester := NewDelayTester()
+	defer tester.Cancel()
+	results := make(chan error, 32)
+	for i := 0; i < 32; i++ {
+		go func() {
+			_, err := tester.Measure(`{"outbounds":[{"protocol":"freedom"}]}`, server.URL)
+			results <- err
+		}()
+	}
+	for i := 0; i < 32; i++ {
+		if err := <-results; err != nil {
+			t.Error("concurrent core probe failed")
+		}
+	}
+	if atomic.LoadInt32(&arrivals) < 32 {
+		t.Fatal("32 core requests did not overlap")
 	}
 }
 

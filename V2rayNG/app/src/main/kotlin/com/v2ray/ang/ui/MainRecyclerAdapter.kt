@@ -14,8 +14,6 @@ import com.v2ray.ang.databinding.ItemQrcodeBinding
 import com.v2ray.ang.databinding.ItemRecyclerMainBinding
 import com.v2ray.ang.dto.EConfigType
 import com.v2ray.ang.extension.toast
-import com.v2ray.ang.helper.ItemTouchHelperAdapter
-import com.v2ray.ang.helper.ItemTouchHelperViewHolder
 import com.v2ray.ang.service.V2RayServiceManager
 import com.v2ray.ang.util.AngConfigManager
 import com.v2ray.ang.util.MmkvManager
@@ -24,8 +22,7 @@ import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
 import java.util.concurrent.TimeUnit
 
-class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<MainRecyclerAdapter.BaseViewHolder>()
-        , ItemTouchHelperAdapter {
+class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<MainRecyclerAdapter.BaseViewHolder>() {
     companion object {
         private const val VIEW_TYPE_ITEM = 1
     }
@@ -42,7 +39,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         if (holder is MainViewHolder) {
             val guid = mActivity.mainViewModel.serverList.getOrNull(position) ?: return
-            val config = mActivity.mainViewModel.serversCache.getOrElse(guid) { MmkvManager.decodeServerConfig(guid) } ?: return
+            val config = mActivity.mainViewModel.serversCache[guid] ?: return
             val outbound = config.getProxyOutbound()
             val aff = MmkvManager.decodeServerAffiliationInfo(guid)
 
@@ -153,23 +150,10 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         return VIEW_TYPE_ITEM
     }
 
-    open class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun onItemSelected() {
-            itemView.setBackgroundColor(Color.LTGRAY)
-        }
-
-        fun onItemClear() {
-            itemView.setBackgroundColor(0)
-        }
-    }
+    open class BaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
     class MainViewHolder(val itemMainBinding: ItemRecyclerMainBinding) :
-            BaseViewHolder(itemMainBinding.root), ItemTouchHelperViewHolder
-
-    override fun onItemDismiss(position: Int) {
-        val guid = mActivity.mainViewModel.serverList.getOrNull(position) ?: return
-        removeProfile(guid)
-    }
+            BaseViewHolder(itemMainBinding.root)
 
     private fun removeProfile(guid: String) {
         val selected = guid == mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER)
@@ -187,18 +171,4 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         } else remove()
     }
 
-    override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
-        mActivity.mainViewModel.swapServer(fromPosition, toPosition)
-        notifyItemMoved(fromPosition, toPosition)
-        // position is changed, since position is used by click callbacks, need to update range
-        if (toPosition > fromPosition)
-            notifyItemRangeChanged(fromPosition, toPosition - fromPosition + 1)
-        else
-            notifyItemRangeChanged(toPosition, fromPosition - toPosition + 1)
-        return true
-    }
-
-    override fun onItemMoveCompleted() {
-        // do nothing
-    }
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="check_concurrency">Parallel profile checks</string>
+    <string name="check_concurrency_summary">%s at once. Lower this on devices with limited memory.</string>
+    <string-array name="check_concurrency_values">
+        <item>1</item><item>4</item><item>8</item><item>16</item><item>32</item><item>64</item>
+    </string-array>
+</resources>

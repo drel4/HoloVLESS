@@ -11,6 +11,8 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
+import android.preference.PreferenceManager
+import com.v2ray.ang.util.ProfileBatch
 import com.v2ray.ang.util.MmkvManager
 import com.v2ray.ang.util.V2rayConfigUtil
 import go.Seq
@@ -29,6 +31,9 @@ class CoreTestService : Service() {
         fun start(context: Context, guids: List<String>) {
             val intent = Intent(context, CoreTestService::class.java)
                     .putStringArrayListExtra("guids", ArrayList(guids))
+                    .putExtra("concurrency", ProfileBatch.concurrency(
+                            PreferenceManager.getDefaultSharedPreferences(context)
+                                    .getString(ProfileBatch.PREFERENCE, null)))
             if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(intent) else context.startService(intent)
         }
     }
@@ -58,33 +63,29 @@ class CoreTestService : Service() {
         val guids = intent?.getStringArrayListExtra("guids").orEmpty().distinct()
         val currentTester = Libv2ray.newDelayTester()
         tester = currentTester
+        val concurrency = ProfileBatch.concurrency(intent?.getIntExtra("concurrency",
+                ProfileBatch.DEFAULT_CONCURRENCY)?.toString())
         report("", 0, guids.size, 0, false)
         batch = scope.launch {
-            val next = AtomicInteger()
             val completed = AtomicInteger()
             val working = AtomicInteger()
             try {
-                // Deliberately lower than upstream's desktop-class concurrency.
-                List(minOf(3, guids.size)) {
-                    launch {
-                        while (isActive) {
-                            val index = next.getAndIncrement()
-                            if (index >= guids.size) break
-                            val guid = guids[index]
-                            MmkvManager.encodeServerTestDelayMillis(guid, 0)
-                            val delay = try {
-                                val config = V2rayConfigUtil.getV2rayConfig(this@CoreTestService, guid)
-                                if (!config.status) -1L else currentTester.measure(config.content, "https://myip.wtf").coerceAtLeast(1L)
-                            } catch (_: Exception) { -1L }
-                            ensureActive()
-                            if (delay >= 0) working.incrementAndGet()
-                            if (MmkvManager.decodeServerConfig(guid) != null) {
-                                MmkvManager.encodeServerTestDelayMillis(guid, delay)
-                            }
-                            report(guid, completed.incrementAndGet(), guids.size, working.get(), false)
-                        }
+                ProfileBatch.run(guids, concurrency) { guid ->
+                    ensureActive()
+                    if (MmkvManager.hasServerConfig(guid)) {
+                        MmkvManager.encodeServerTestDelayMillis(guid, 0)
                     }
-                }.joinAll()
+                    val delay = try {
+                        val config = V2rayConfigUtil.getV2rayConfig(this@CoreTestService, guid)
+                        if (!config.status) -1L else currentTester.measure(config.content, "https://myip.wtf").coerceAtLeast(1L)
+                    } catch (_: Exception) { -1L }
+                    ensureActive()
+                    if (delay >= 0) working.incrementAndGet()
+                    if (MmkvManager.hasServerConfig(guid)) {
+                        MmkvManager.encodeServerTestDelayMillis(guid, delay)
+                    }
+                    report(guid, completed.incrementAndGet(), guids.size, working.get(), false)
+                }
                 ensureActive()
                 report("", completed.get(), guids.size, working.get(), true)
                 withContext(Dispatchers.Main) { stopSelf(startId) }

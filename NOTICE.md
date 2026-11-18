@@ -18,7 +18,9 @@ subscription parsing, domain-based subscription groups, endpoint and routed
 connectivity diagnostics, reproducible native dependency packaging, Hysteria2
 profile support, VPN settings persistence, and background/batched subscription
 imports and group loading, lossless full-JSON profiles, JSON/Hysteria2 editing,
-profile sorting, independent core delay tests, and selected-profile deletion.
+profile sorting, independent core delay tests, selected-profile deletion,
+compact list-row caching, incremental group loading, removal of manual
+drag-reordering, and configurable concurrent profile checks.
 
 HoloVLESS is provided without warranty, as described by GPL-3.0 sections 15
 and 16. The HoloVLESS project does not provide a warranty on behalf of the

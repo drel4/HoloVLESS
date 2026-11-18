@@ -10,7 +10,11 @@ modern [Xray-core](https://github.com/XTLS/Xray-core).
 Download APKs from [GitHub Releases](https://github.com/drel4/HoloVLESS/releases).
 Each release also provides GitHub-generated source ZIP and tar.gz archives.
 
-Version 1.1 adds full Xray JSON imports and editing, Hysteria2 link editing,
+Version 1.1.1 adds a three-line sort icon, removes manual drag-reordering,
+loads compact cached list rows in the background, and checks up to 32 profiles
+concurrently by default (adjustable in Settings).
+
+Version 1.1 added full Xray JSON imports and editing, Hysteria2 link editing,
 profile sorting, independent core-based connection checks, and a fix for
 deleting the selected/top profile. Large subscription imports remain batched
 and run off the UI thread.

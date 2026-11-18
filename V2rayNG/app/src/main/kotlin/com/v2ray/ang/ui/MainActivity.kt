@@ -9,7 +9,6 @@ import android.net.Uri
 import android.net.VpnService
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.ItemTouchHelper
 import android.text.TextUtils
 import android.view.KeyEvent
 import android.view.Menu
@@ -26,7 +25,6 @@ import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityMainBinding
 import com.v2ray.ang.dto.EConfigType
 import com.v2ray.ang.extension.toast
-import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
 import com.v2ray.ang.service.V2RayServiceManager
 import com.v2ray.ang.util.AngConfigManager
 import com.v2ray.ang.util.MmkvManager
@@ -54,9 +52,9 @@ class MainActivity : BaseActivity() {
             startV2Ray()
         }
     }
-    private var mItemTouchHelper: ItemTouchHelper? = null
     private var selectedGroupId: String? = null
     private var isCheckingProfiles = false
+    private var renderedRowCount = 0
     val mainViewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,10 +95,6 @@ class MainActivity : BaseActivity() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = adapter
 
-        val callback = SimpleItemTouchHelperCallback(adapter)
-        mItemTouchHelper = ItemTouchHelper(callback)
-        mItemTouchHelper?.attachToRecyclerView(binding.recyclerView)
-
 
         setupViewModelObserver()
         setupMainTabs()
@@ -116,15 +110,31 @@ class MainActivity : BaseActivity() {
         }
         mainViewModel.updateListAction.observe(this) {
             val index = it ?: return@observe
-            if (index >= 0) {
+            val count = mainViewModel.serverList.size
+            if (index >= 0 && index < count && renderedRowCount == count) {
                 adapter.notifyItemChanged(index)
             } else {
                 adapter.notifyDataSetChanged()
             }
+            renderedRowCount = count
         }
         mainViewModel.updateTestResultAction.observe(this) {
             binding.connectButton.text = it
         }
+        mainViewModel.insertedRows.observe(this) { range ->
+            if (range == null) return@observe
+            mainViewModel.insertedRows.value = null
+            val count = mainViewModel.serverList.size
+            // Background loads can finish while this observer is stopped. A
+            // replayed range must never be inserted into an already complete list.
+            if (renderedRowCount == range.first && range.first + range.second == count) {
+                adapter.notifyItemRangeInserted(range.first, range.second)
+            } else {
+                adapter.notifyDataSetChanged()
+            }
+            renderedRowCount = count
+        }
+        mainViewModel.isLoading.observe(this) { invalidateOptionsMenu() }
         mainViewModel.isTesting.observe(this) {
             isCheckingProfiles = it == true
             invalidateOptionsMenu()
@@ -228,6 +238,9 @@ class MainActivity : BaseActivity() {
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         menu?.findItem(R.id.sub_update)?.isVisible = !selectedGroupId.isNullOrEmpty()
         menu?.findItem(R.id.cancel_checks)?.isVisible = isCheckingProfiles
+        val ready = mainViewModel.isLoading.value != true
+        listOf(R.id.sort_profiles, R.id.check_profiles, R.id.ping_profiles, R.id.export_all)
+                .forEach { menu?.findItem(it)?.isEnabled = ready }
         return super.onPrepareOptionsMenu(menu)
     }
 

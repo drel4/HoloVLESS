@@ -53,6 +53,7 @@
     </item>
     <item
         android:id="@+id/sort_profiles"
+        android:icon="@drawable/ic_sort_white_24dp"
         android:title="@string/sort_profiles"
         android:showAsAction="always" />
     <item

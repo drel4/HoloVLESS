@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="check_concurrency">Параллельные проверки профилей</string>
+    <string name="check_concurrency_summary">Одновременно: %s. Уменьшите при нехватке памяти.</string>
+</resources>

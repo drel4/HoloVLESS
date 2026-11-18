@@ -68,6 +68,13 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/title_advanced">
+        <ListPreference
+            android:key="pref_check_concurrency"
+            android:defaultValue="32"
+            android:entries="@array/check_concurrency_values"
+            android:entryValues="@array/check_concurrency_values"
+            android:summary="@string/check_concurrency_summary"
+            android:title="@string/check_concurrency" />
 
         <CheckBoxPreference
             android:key="pref_forward_ipv6"

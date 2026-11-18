@@ -24,12 +24,25 @@ object MmkvManager {
     private val serverSubscriptionStorage by lazy { MMKV.mmkvWithID(ID_SERVER_SUBSCRIPTION, MMKV.MULTI_PROCESS_MODE) }
     private val subStorage by lazy { MMKV.mmkvWithID(ID_SUB, MMKV.MULTI_PROCESS_MODE) }
 
+    private val gson = Gson()
+    private val serverRowStorage by lazy { MMKV.mmkvWithID("SERVER_ROW", MMKV.MULTI_PROCESS_MODE) }
+
+    fun hasServerConfig(guid: String): Boolean = serverStorage?.containsKey(guid) == true
+
+    /** Backfill only the group being visited on older installations. */
+    @Synchronized
+    fun decodeServerRowJson(guid: String): String? {
+        serverRowStorage?.decodeString(guid)?.let { return it }
+        val config = decodeServerConfig(guid) ?: return null
+        return ProfileRows.encode(config).also { serverRowStorage?.encode(guid, it) }
+    }
+
     fun decodeServerList(): MutableList<String> {
         val json = mainStorage?.decodeString(KEY_ANG_CONFIGS)
         return if (json.isNullOrBlank()) {
             mutableListOf()
         } else {
-            Gson().fromJson(json, Array<String>::class.java).toMutableList()
+            gson.fromJson(json, Array<String>::class.java).toMutableList()
         }
     }
 
@@ -41,7 +54,7 @@ object MmkvManager {
         if (json.isNullOrBlank()) {
             return null
         }
-        return Gson().fromJson(json, ServerConfig::class.java)
+        return gson.fromJson(json, ServerConfig::class.java)
     }
 
     fun decodeServerSubscriptionId(guid: String): String? {
@@ -57,12 +70,13 @@ object MmkvManager {
     @Synchronized
     fun encodeServerConfig(guid: String, config: ServerConfig): String {
         val key = guid.ifBlank { Utils.getUuid() }
-        serverStorage?.encode(key, Gson().toJson(config))
+        serverStorage?.encode(key, gson.toJson(config))
+        serverRowStorage?.encode(key, ProfileRows.encode(config))
         serverSubscriptionStorage?.encode(key, config.subscriptionId)
         val serverList= decodeServerList()
         if (!serverList.contains(key)) {
             serverList.add(key)
-            mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(serverList))
+            mainStorage?.encode(KEY_ANG_CONFIGS, gson.toJson(serverList))
             if (mainStorage?.decodeString(KEY_SELECTED_SERVER).isNullOrBlank()) {
                 mainStorage?.encode(KEY_SELECTED_SERVER, key)
             }
@@ -73,12 +87,12 @@ object MmkvManager {
     /** Saves a parsed import with one ID-list read/write, rather than one per profile. */
     fun importServerConfigs(configs: List<ServerConfig>, subid: String) {
         if (configs.isEmpty()) return
-        val gson = Gson()
         // Stage expensive serialization outside the list-mutation lock so UI
         // actions do not wait for every profile in a large import.
         val imported = configs.map { config ->
             val key = Utils.getUuid()
             serverStorage?.encode(key, gson.toJson(config))
+            serverRowStorage?.encode(key, ProfileRows.encode(config))
             serverSubscriptionStorage?.encode(key, config.subscriptionId)
             key to config
         }
@@ -110,6 +124,7 @@ object MmkvManager {
             serverStorage?.remove(key)
             serverAffStorage?.remove(key)
             serverSubscriptionStorage?.remove(key)
+            serverRowStorage?.remove(key)
         }
     }
 
@@ -123,7 +138,7 @@ object MmkvManager {
         current.indices.forEach { position ->
             if (current[position] in reordered) current[position] = ordered[index++]
         }
-        mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(current))
+        mainStorage?.encode(KEY_ANG_CONFIGS, gson.toJson(current))
     }
 
     @Synchronized
@@ -136,10 +151,11 @@ object MmkvManager {
         }
         val serverList= decodeServerList()
         serverList.remove(guid)
-        mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(serverList))
+        mainStorage?.encode(KEY_ANG_CONFIGS, gson.toJson(serverList))
         serverStorage?.remove(guid)
         serverAffStorage?.remove(guid)
         serverSubscriptionStorage?.remove(guid)
+        serverRowStorage?.remove(guid)
     }
 
     @Synchronized
@@ -156,11 +172,12 @@ object MmkvManager {
             mainStorage?.remove(KEY_SELECTED_SERVER)
         }
         serverList.removeAll(removedServers)
-        mainStorage?.encode(KEY_ANG_CONFIGS, Gson().toJson(serverList))
+        mainStorage?.encode(KEY_ANG_CONFIGS, gson.toJson(serverList))
         removedServers.forEach { key ->
             serverStorage?.remove(key)
             serverAffStorage?.remove(key)
             serverSubscriptionStorage?.remove(key)
+            serverRowStorage?.remove(key)
         }
     }
 
@@ -172,7 +189,7 @@ object MmkvManager {
         if (json.isNullOrBlank()) {
             return null
         }
-        return Gson().fromJson(json, ServerAffiliationInfo::class.java)
+        return gson.fromJson(json, ServerAffiliationInfo::class.java)
     }
 
     fun encodeServerTestDelayMillis(guid: String, testResult: Long) {
@@ -181,14 +198,14 @@ object MmkvManager {
         }
         val aff = decodeServerAffiliationInfo(guid) ?: ServerAffiliationInfo()
         aff.testDelayMillis = testResult
-        serverAffStorage?.encode(guid, Gson().toJson(aff))
+        serverAffStorage?.encode(guid, gson.toJson(aff))
     }
 
     fun clearAllTestDelayResults() {
         serverAffStorage?.allKeys()?.forEach { key ->
             decodeServerAffiliationInfo(key)?.let { aff ->
                 aff.testDelayMillis = 0
-                serverAffStorage?.encode(key, Gson().toJson(aff))
+                serverAffStorage?.encode(key, gson.toJson(aff))
             }
         }
     }
@@ -203,7 +220,7 @@ object MmkvManager {
         val subItem = SubscriptionItem()
         subItem.remarks = "import sub"
         subItem.url = url
-        subStorage?.encode(Utils.getUuid(), Gson().toJson(subItem))
+        subStorage?.encode(Utils.getUuid(), gson.toJson(subItem))
         return 1
     }
 
@@ -212,7 +229,7 @@ object MmkvManager {
         subStorage?.allKeys()?.forEach { key ->
             val json = subStorage?.decodeString(key)
             if (!json.isNullOrBlank()) {
-                subscriptions.add(Pair(key, Gson().fromJson(json, SubscriptionItem::class.java)))
+                subscriptions.add(Pair(key, gson.fromJson(json, SubscriptionItem::class.java)))
             }
         }
         subscriptions.sortedBy { (_, value) -> value.addedTime }
